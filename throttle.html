@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THROTTLE — Guess the Car</title>
+  <meta name="description" content="Wordle-style car guessing game. Guess the mystery car in 8 tries.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: 'Outfit', sans-serif; min-height: 100vh; overflow-x: hidden;
+    }
+    :root {
+      --bg: #0a0a0f; --surface: #13131a; --surfaceHover: #1a1a24;
+      --border: #2a2a3a; --correct: #16a34a; --correctBg: rgba(22,163,74,0.15);
+      --close: #ca8a04; --closeBg: rgba(202,138,4,0.12);
+      --wrong: #3a3a4a; --wrongBg: rgba(58,58,74,0.3);
+      --text: #e4e4ec; --textDim: #8888a0;
+      --accent: #f43f5e; --accentGlow: rgba(244,63,94,0.3); --accentGrad: #fb923c;
+    }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .glow {
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 400px; border-radius: 50%;
+      background: radial-gradient(circle, var(--accentGlow) 0%, transparent 70%);
+      pointer-events: none; z-index: 0; transition: background 0.4s;
+    }
+    .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 20px 16px 40px; }
+
+    /* Color picker */
+    .color-btn-wrap { position: absolute; top: 20px; right: 16px; z-index: 10; }
+    .color-btn {
+      width: 44px; height: 44px; border-radius: 10px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; transition: all .2s; border: 1.5px solid var(--accent);
+      background: color-mix(in srgb, var(--accent) 13%, transparent);
+    }
+    .color-picker {
+      position: absolute; top: 42px; right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 8px; display: none; gap: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    }
+    .color-picker.open { display: flex; }
+    .color-swatch {
+      width: 32px; height: 32px; border-radius: 8px;
+      border: 2px solid transparent; cursor: pointer; transition: all .15s;
+    }
+    .color-swatch.active { border-color: #fff; transform: scale(1.15); }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 28px; }
+    .title-row { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 6px; }
+    .title { font-size: 38px; font-weight: 900; letter-spacing: -0.02em; color: var(--accent); }
+    .subtitle { color: var(--textDim); font-size: 14px; font-weight: 300; }
+    .mode-row, .region-row { display: flex; justify-content: center; flex-wrap: wrap; }
+    .mode-row { gap: 8px; margin-top: 14px; }
+    .region-row { gap: 6px; margin-top: 10px; display: none; }
+    .region-row.show { display: flex; }
+    .pill {
+      padding: 7px 18px; border-radius: 20px; background: transparent;
+      font-family: 'Outfit'; font-size: 13px; font-weight: 600;
+      cursor: pointer; transition: all .2s; border: 1px solid var(--border); color: var(--textDim);
+    }
+    .pill.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); color: var(--accent); }
+    .pill-sm { padding: 5px 14px; border-radius: 16px; font-size: 12px; }
+    .pill-sm.active { border-color: rgba(255,255,255,0.8); background: rgba(255,255,255,0.2); color: #fff; }
+
+    /* Help */
+    .help-panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; margin-bottom: 24px; line-height: 1.7; font-size: 14px; display: none;
+    }
+    .help-panel.open { display: block; }
+    .help-panel p { margin: 8px 0; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .legend-dot { display: inline-block; width: 16px; height: 16px; border-radius: 4px; vertical-align: middle; margin-right: 6px; }
+
+    /* Input */
+    .input-wrap { position: relative; max-width: 420px; margin: 0 auto 24px; }
+    .input-bar {
+      display: flex; border-radius: 14px; overflow: hidden;
+      border: 2px solid var(--border); background: var(--surface);
+      box-shadow: 0 0 20px var(--accentGlow); transition: border-color .2s;
+    }
+    .input-bar input {
+      flex: 1; padding: 14px 18px; background: transparent; border: none;
+      color: var(--text); font-size: 15px; font-family: 'Outfit'; outline: none;
+    }
+    .input-bar input::placeholder { color: var(--textDim); }
+    .guess-count {
+      display: flex; align-items: center; padding: 0 14px;
+      color: var(--textDim); font-family: 'Space Mono'; font-size: 13px; font-weight: 700;
+      border-left: 1px solid var(--border);
+    }
+
+    /* Dropdown */
+    .dropdown {
+      position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden; z-index: 50;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      max-height: min(320px, 50vh); overflow-y: auto; display: none;
+    }
+    .dropdown.open { display: block; }
+    .dd-item {
+      padding: 12px 18px; cursor: pointer; border-bottom: 1px solid var(--border); transition: background .15s;
+    }
+    .dd-item:last-child { border-bottom: none; }
+    .dd-item:hover, .dd-item.active { background: var(--surfaceHover); }
+    .dd-name { font-weight: 600; font-size: 14px; }
+    .dd-meta { font-size: 12px; color: var(--textDim); margin-top: 2px; }
+
+    /* Grid */
+    .col-headers, .guess-row {
+      display: grid; grid-template-columns: minmax(90px, 1.3fr) repeat(6, 1fr); gap: 6px;
+    }
+    .col-headers { margin-bottom: 6px; padding: 0 2px; display: none; }
+    .col-headers.show { display: grid; }
+    .col-header {
+      text-align: center; font-size: 10px; font-weight: 700; color: var(--textDim);
+      font-family: 'Space Mono'; letter-spacing: 0.08em;
+    }
+    .guess-rows { display: flex; flex-direction: column; gap: 6px; }
+    .cell {
+      border-radius: 10px; padding: 10px 6px; text-align: center;
+      font-family: 'Space Mono'; font-size: 12px; font-weight: 700;
+      overflow: hidden; white-space: nowrap; text-overflow: ellipsis; line-height: 1.3;
+    }
+    .cell-model {
+      font-family: 'Outfit'; display: flex; align-items: center; justify-content: center;
+    }
+    .cell-arrow { font-size: 16px; margin-top: 2px; line-height: 1; }
+
+    /* Action buttons */
+    .action-row { display: none; justify-content: center; margin-top: 12px; }
+    .action-row.show { display: flex; }
+    .hint-btn, .forfeit-btn {
+      padding: 8px 20px; border-radius: 12px; font-weight: 600; font-size: 13px;
+      cursor: pointer; font-family: 'Outfit'; transition: all .2s;
+    }
+    .hint-btn { border: 1px solid rgba(255,255,255,0.8); background: rgba(255,255,255,0.2); color: #fff; }
+    .forfeit-btn { border: 1px solid #f43f5e; background: rgba(244,63,94,0.08); color: #f43f5e; }
+
+    /* Game over */
+    .gameover {
+      margin-top: 28px; text-align: center; padding: 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; display: none;
+    }
+    .gameover.show { display: block; animation: fadeUp 0.5s ease; }
+    .go-emoji { font-size: 40px; margin-bottom: 8px; }
+    .go-title { font-size: 24px; font-weight: 800; margin: 0 0 6px; }
+    .go-sub { color: var(--textDim); font-size: 14px; margin: 0; }
+    .go-sub strong { color: var(--text); }
+    .go-btns { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .go-btns button {
+      padding: 10px 24px; border-radius: 12px; font-weight: 700; font-size: 14px;
+      cursor: pointer; font-family: 'Outfit'; border: none;
+    }
+    .go-primary { background: linear-gradient(135deg, var(--accent), var(--accentGrad)); color: #fff; }
+    .go-secondary { background: transparent; border: 1px solid var(--border) !important; color: var(--textDim); }
+    .answer-grid {
+      margin-top: 24px; display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; text-align: center;
+    }
+    .answer-cell {
+      background: color-mix(in srgb, var(--correct) 9%, transparent);
+      border: 1px solid color-mix(in srgb, var(--correct) 27%, transparent);
+      border-radius: 10px; padding: 10px 8px;
+    }
+    .answer-label { font-size: 9px; font-weight: 700; color: var(--textDim); font-family: 'Space Mono'; letter-spacing: 0.1em; margin-bottom: 4px; }
+    .answer-val { font-size: 13px; font-weight: 700; font-family: 'Space Mono'; }
+    .footer { text-align: center; margin-top: 40px; color: var(--textDim); font-size: 12px; }
+
+    /* Prevent text selection on interactive elements */
+    .cell, .pill, .hint-btn, .forfeit-btn, .color-btn, .color-swatch,
+    .go-btns button, .col-header, .dd-item { user-select: none; -webkit-user-select: none; }
+
+    @keyframes flipIn { 0%{transform:rotateX(90deg) scale(.8);opacity:0} 100%{transform:rotateX(0) scale(1);opacity:1} }
+    @keyframes fadeUp { 0%{transform:translateY(20px);opacity:0} 100%{transform:translateY(0);opacity:1} }
+
+    /* Mobile optimizations */
+    @media (max-width: 600px) {
+      .col-headers, .guess-row {
+        grid-template-columns: minmax(60px, 1.2fr) repeat(6, 1fr); gap: 3px;
+      }
+      .cell { font-size: 10px; padding: 8px 3px; border-radius: 8px; }
+      .cell-arrow { font-size: 14px; }
+      .col-header { font-size: 8px; letter-spacing: 0.04em; }
+      .title { font-size: 30px; }
+      .dd-item { padding: 16px 18px; }
+    }
+  </style>
+</head>
+<body>
+<div class="glow" id="glow"></div>
+<div class="wrap">
+  <div class="color-btn-wrap">
+    <button class="color-btn" id="colorToggle" aria-label="Change accent color">🎨</button>
+    <div class="color-picker" id="colorPicker"></div>
+  </div>
+  <header>
+    <div class="title-row"><h1 class="title">THROTTLE</h1><span style="font-size:28px">🏎️</span></div>
+    <p class="subtitle">Guess the mystery car in 8 tries</p>
+    <div class="mode-row" id="modeRow"></div>
+    <div class="region-row" id="regionRow"></div>
+  </header>
+  <div class="help-panel" id="helpPanel">
+    <p style="font-weight:600;font-size:16px;margin-top:0">How to Play</p>
+    <p>Guess the mystery car. After each guess, the tiles show how close you are:</p>
+    <div class="legend">
+      <span><span class="legend-dot" style="background:var(--correct)"></span> Exact match</span>
+      <span><span class="legend-dot" style="background:var(--close)"></span> Close</span>
+      <span><span class="legend-dot" style="background:var(--wrong)"></span> Wrong</span>
+    </div>
+    <p><strong>Make</strong> — green = exact, yellow = same country.</p>
+    <p><strong>Origin</strong> — yellow = same region.</p>
+    <p><strong>Era</strong> — yellow = within one decade, arrows show direction.</p>
+    <p><strong>HP</strong> — shown in groups of 10 (e.g. 200s), yellow = within 50, arrows show higher/lower.</p>
+    <p><strong>Body, Engine</strong> — green or gray.</p>
+    <button class="pill" id="helpClose" style="border:none;background:var(--accent);color:#fff;margin-top:8px;padding:6px 16px;font-size:13px">Got it</button>
+  </div>
+  <div class="input-wrap" id="inputWrap">
+    <div class="input-bar"><input type="text" id="searchInput" placeholder="Type a car name..." autocomplete="off" autocapitalize="off" inputmode="search"><div class="guess-count" id="guessCount">0/8</div></div>
+    <div class="dropdown" id="dropdown"></div>
+  </div>
+  <div class="col-headers" id="colHeaders">
+    <div class="col-header">MODEL</div><div class="col-header">MAKE</div><div class="col-header">ORIGIN</div>
+    <div class="col-header">BODY</div><div class="col-header">ERA</div><div class="col-header">HP</div><div class="col-header">ENGINE</div>
+  </div>
+  <div class="guess-rows" id="guessRows"></div>
+  <div class="action-row" id="actionRow"></div>
+  <div class="gameover" id="gameover"></div>
+  <div class="footer" id="footer"></div>
+</div>
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// CAR DATABASE
+// ═══════════════════════════════════════════════════════════════════════════════
+const CARS = [
+  // ═══ JAPAN ═══════════════════════════════════════════════════════════════════
+  // Toyota
+  { name: "Toyota Camry", make: "Toyota", country: "Japan", body: "Sedan", decade: 1980, hp: 203, drivetrain: "FWD", engine: "I4" },
+  { name: "Toyota Corolla", make: "Toyota", country: "Japan", body: "Sedan", decade: 1960, hp: 169, drivetrain: "FWD", engine: "I4" },
+  { name: "Toyota Supra", make: "Toyota", country: "Japan", body: "Coupe", decade: 1970, hp: 382, drivetrain: "RWD", engine: "I6" },
+  { name: "Toyota RAV4", make: "Toyota", country: "Japan", body: "SUV", decade: 1990, hp: 203, drivetrain: "AWD", engine: "I4" },
+  { name: "Toyota Tacoma", make: "Toyota", country: "Japan", body: "Truck", decade: 1990, hp: 278, drivetrain: "4WD", engine: "I4T" },
+  { name: "Toyota 4Runner", make: "Toyota", country: "Japan", body: "SUV", decade: 1980, hp: 270, drivetrain: "4WD", engine: "I4T" },
+  { name: "Toyota GR86", make: "Toyota", country: "Japan", body: "Coupe", decade: 2020, hp: 228, drivetrain: "RWD", engine: "F4" },
+  { name: "Toyota Tundra", make: "Toyota", country: "Japan", body: "Truck", decade: 1990, hp: 389, drivetrain: "4WD", engine: "V6T" },
+  { name: "Toyota Land Cruiser", make: "Toyota", country: "Japan", body: "SUV", decade: 1950, hp: 326, drivetrain: "4WD", engine: "I4T" },
+  { name: "Toyota Prius", make: "Toyota", country: "Japan", body: "Hatchback", decade: 1990, hp: 196, drivetrain: "FWD", engine: "Hybrid" },
+  { name: "Toyota AE86", make: "Toyota", country: "Japan", body: "Coupe", decade: 1980, hp: 128, drivetrain: "RWD", engine: "I4" },
+  { name: "Toyota MR2", make: "Toyota", country: "Japan", body: "Coupe", decade: 1980, hp: 200, drivetrain: "RWD", engine: "I4T" },
+  { name: "Toyota Celica", make: "Toyota", country: "Japan", body: "Coupe", decade: 1970, hp: 180, drivetrain: "FWD", engine: "I4" },
+  { name: "Toyota Highlander", make: "Toyota", country: "Japan", body: "SUV", decade: 2000, hp: 265, drivetrain: "AWD", engine: "V6" },
+  { name: "Toyota Crown", make: "Toyota", country: "Japan", body: "Sedan", decade: 1950, hp: 340, drivetrain: "AWD", engine: "I4T" },
+  { name: "Toyota GR Corolla", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2020, hp: 300, drivetrain: "AWD", engine: "I3T" },
+  { name: "Toyota Sequoia", make: "Toyota", country: "Japan", body: "SUV", decade: 2000, hp: 437, drivetrain: "4WD", engine: "Hybrid" },
+  { name: "Toyota Yaris GR", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2020, hp: 268, drivetrain: "AWD", engine: "I3T" },
+  { name: "Toyota 2000GT", make: "Toyota", country: "Japan", body: "Coupe", decade: 1960, hp: 150, drivetrain: "RWD", engine: "I6" },
+  { name: "Toyota FJ Cruiser", make: "Toyota", country: "Japan", body: "SUV", decade: 2000, hp: 260, drivetrain: "4WD", engine: "V6" },
+  // Honda
+  { name: "Honda Civic", make: "Honda", country: "Japan", body: "Sedan", decade: 1970, hp: 200, drivetrain: "FWD", engine: "I4T" },
+  { name: "Honda Accord", make: "Honda", country: "Japan", body: "Sedan", decade: 1970, hp: 192, drivetrain: "FWD", engine: "I4T" },
+  { name: "Honda CR-V", make: "Honda", country: "Japan", body: "SUV", decade: 1990, hp: 190, drivetrain: "AWD", engine: "I4T" },
+  { name: "Honda Civic Type R", make: "Honda", country: "Japan", body: "Hatchback", decade: 1990, hp: 315, drivetrain: "FWD", engine: "I4T" },
+  { name: "Honda S2000", make: "Honda", country: "Japan", body: "Convertible", decade: 1990, hp: 237, drivetrain: "RWD", engine: "I4" },
+  { name: "Honda Prelude", make: "Honda", country: "Japan", body: "Coupe", decade: 1970, hp: 195, drivetrain: "FWD", engine: "I4" },
+  { name: "Honda Pilot", make: "Honda", country: "Japan", body: "SUV", decade: 2000, hp: 285, drivetrain: "AWD", engine: "V6" },
+  { name: "Honda Ridgeline", make: "Honda", country: "Japan", body: "Truck", decade: 2000, hp: 280, drivetrain: "AWD", engine: "V6" },
+  { name: "Honda HR-V", make: "Honda", country: "Japan", body: "SUV", decade: 2010, hp: 158, drivetrain: "AWD", engine: "I4" },
+  { name: "Honda Fit", make: "Honda", country: "Japan", body: "Hatchback", decade: 2000, hp: 130, drivetrain: "FWD", engine: "I4" },
+  { name: "Honda NSX (1990)", make: "Honda", country: "Japan", body: "Coupe", decade: 1990, hp: 290, drivetrain: "RWD", engine: "V6" },
+  // Acura
+  { name: "Acura Integra", make: "Acura", country: "Japan", body: "Hatchback", decade: 1980, hp: 200, drivetrain: "FWD", engine: "I4T" },
+  { name: "Acura NSX", make: "Acura", country: "Japan", body: "Coupe", decade: 2010, hp: 573, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Acura TLX Type S", make: "Acura", country: "Japan", body: "Sedan", decade: 2020, hp: 355, drivetrain: "AWD", engine: "V6T" },
+  { name: "Acura MDX", make: "Acura", country: "Japan", body: "SUV", decade: 2000, hp: 290, drivetrain: "AWD", engine: "V6" },
+  { name: "Acura RSX", make: "Acura", country: "Japan", body: "Coupe", decade: 2000, hp: 201, drivetrain: "FWD", engine: "I4" },
+  // Nissan
+  { name: "Nissan 370Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 2000, hp: 332, drivetrain: "RWD", engine: "V6" },
+  { name: "Nissan Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 2020, hp: 400, drivetrain: "RWD", engine: "V6T" },
+  { name: "Nissan GT-R", make: "Nissan", country: "Japan", body: "Coupe", decade: 2000, hp: 565, drivetrain: "AWD", engine: "V6T" },
+  { name: "Nissan Altima", make: "Nissan", country: "Japan", body: "Sedan", decade: 1990, hp: 188, drivetrain: "FWD", engine: "I4" },
+  { name: "Nissan Skyline GT-R R34", make: "Nissan", country: "Japan", body: "Coupe", decade: 1990, hp: 276, drivetrain: "AWD", engine: "I6T" },
+  { name: "Nissan 240SX", make: "Nissan", country: "Japan", body: "Coupe", decade: 1980, hp: 155, drivetrain: "RWD", engine: "I4" },
+  { name: "Nissan Maxima", make: "Nissan", country: "Japan", body: "Sedan", decade: 1980, hp: 300, drivetrain: "FWD", engine: "V6" },
+  { name: "Nissan Frontier", make: "Nissan", country: "Japan", body: "Truck", decade: 1990, hp: 310, drivetrain: "4WD", engine: "V6" },
+  { name: "Nissan Rogue", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 201, drivetrain: "AWD", engine: "I4T" },
+  { name: "Nissan Pathfinder", make: "Nissan", country: "Japan", body: "SUV", decade: 1980, hp: 284, drivetrain: "4WD", engine: "V6" },
+  { name: "Nissan 350Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 2000, hp: 306, drivetrain: "RWD", engine: "V6" },
+  { name: "Nissan Leaf", make: "Nissan", country: "Japan", body: "Hatchback", decade: 2010, hp: 147, drivetrain: "FWD", engine: "EV" },
+  { name: "Nissan Ariya", make: "Nissan", country: "Japan", body: "SUV", decade: 2020, hp: 389, drivetrain: "AWD", engine: "EV" },
+  // Mazda
+  { name: "Mazda MX-5 Miata", make: "Mazda", country: "Japan", body: "Convertible", decade: 1980, hp: 181, drivetrain: "RWD", engine: "I4" },
+  { name: "Mazda3", make: "Mazda", country: "Japan", body: "Hatchback", decade: 2000, hp: 191, drivetrain: "AWD", engine: "I4" },
+  { name: "Mazda RX-7", make: "Mazda", country: "Japan", body: "Coupe", decade: 1970, hp: 255, drivetrain: "RWD", engine: "Rotary" },
+  { name: "Mazda RX-8", make: "Mazda", country: "Japan", body: "Coupe", decade: 2000, hp: 232, drivetrain: "RWD", engine: "Rotary" },
+  { name: "Mazda CX-5", make: "Mazda", country: "Japan", body: "SUV", decade: 2010, hp: 187, drivetrain: "AWD", engine: "I4" },
+  { name: "Mazda CX-50", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 256, drivetrain: "AWD", engine: "I4T" },
+  { name: "Mazda6", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 227, drivetrain: "FWD", engine: "I4T" },
+  { name: "Mazda CX-90", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 340, drivetrain: "AWD", engine: "I6T" },
+  // Subaru
+  { name: "Subaru WRX", make: "Subaru", country: "Japan", body: "Sedan", decade: 1990, hp: 271, drivetrain: "AWD", engine: "F4T" },
+  { name: "Subaru BRZ", make: "Subaru", country: "Japan", body: "Coupe", decade: 2010, hp: 228, drivetrain: "RWD", engine: "F4" },
+  { name: "Subaru Outback", make: "Subaru", country: "Japan", body: "Wagon", decade: 1990, hp: 182, drivetrain: "AWD", engine: "F4" },
+  { name: "Subaru WRX STI", make: "Subaru", country: "Japan", body: "Sedan", decade: 2000, hp: 310, drivetrain: "AWD", engine: "F4T" },
+  { name: "Subaru Forester", make: "Subaru", country: "Japan", body: "SUV", decade: 1990, hp: 182, drivetrain: "AWD", engine: "F4" },
+  { name: "Subaru Crosstrek", make: "Subaru", country: "Japan", body: "SUV", decade: 2010, hp: 152, drivetrain: "AWD", engine: "F4" },
+  { name: "Subaru Legacy", make: "Subaru", country: "Japan", body: "Sedan", decade: 1980, hp: 182, drivetrain: "AWD", engine: "F4" },
+  { name: "Subaru Impreza", make: "Subaru", country: "Japan", body: "Hatchback", decade: 1990, hp: 152, drivetrain: "AWD", engine: "F4" },
+  { name: "Subaru SVX", make: "Subaru", country: "Japan", body: "Coupe", decade: 1990, hp: 230, drivetrain: "AWD", engine: "F6" },
+  // Mitsubishi
+  { name: "Mitsubishi Lancer Evo", make: "Mitsubishi", country: "Japan", body: "Sedan", decade: 1990, hp: 291, drivetrain: "AWD", engine: "I4T" },
+  { name: "Mitsubishi Eclipse", make: "Mitsubishi", country: "Japan", body: "Coupe", decade: 1990, hp: 210, drivetrain: "FWD", engine: "I4T" },
+  { name: "Mitsubishi 3000GT VR-4", make: "Mitsubishi", country: "Japan", body: "Coupe", decade: 1990, hp: 320, drivetrain: "AWD", engine: "V6T" },
+  { name: "Mitsubishi Outlander", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 2000, hp: 248, drivetrain: "AWD", engine: "Hybrid" },
+  // Lexus
+  { name: "Lexus IS", make: "Lexus", country: "Japan", body: "Sedan", decade: 1990, hp: 311, drivetrain: "RWD", engine: "V6" },
+  { name: "Lexus LC 500", make: "Lexus", country: "Japan", body: "Coupe", decade: 2010, hp: 471, drivetrain: "RWD", engine: "V8" },
+  { name: "Lexus LFA", make: "Lexus", country: "Japan", body: "Coupe", decade: 2010, hp: 553, drivetrain: "RWD", engine: "V10" },
+  { name: "Lexus RX", make: "Lexus", country: "Japan", body: "SUV", decade: 1990, hp: 275, drivetrain: "AWD", engine: "V6" },
+  { name: "Lexus GX", make: "Lexus", country: "Japan", body: "SUV", decade: 2000, hp: 349, drivetrain: "4WD", engine: "I4T" },
+  { name: "Lexus ES", make: "Lexus", country: "Japan", body: "Sedan", decade: 1980, hp: 203, drivetrain: "FWD", engine: "I4" },
+  { name: "Lexus LS", make: "Lexus", country: "Japan", body: "Sedan", decade: 1980, hp: 416, drivetrain: "AWD", engine: "V6T" },
+  { name: "Lexus RC F", make: "Lexus", country: "Japan", body: "Coupe", decade: 2010, hp: 472, drivetrain: "RWD", engine: "V8" },
+  // Infiniti
+  { name: "Infiniti G35", make: "Infiniti", country: "Japan", body: "Coupe", decade: 2000, hp: 298, drivetrain: "RWD", engine: "V6" },
+  { name: "Infiniti Q50 Red Sport", make: "Infiniti", country: "Japan", body: "Sedan", decade: 2010, hp: 400, drivetrain: "RWD", engine: "V6T" },
+  { name: "Infiniti Q60", make: "Infiniti", country: "Japan", body: "Coupe", decade: 2010, hp: 400, drivetrain: "AWD", engine: "V6T" },
+  // Suzuki / Daihatsu / Other JDM
+  { name: "Suzuki Jimny", make: "Suzuki", country: "Japan", body: "SUV", decade: 1970, hp: 102, drivetrain: "4WD", engine: "I4T" },
+  { name: "Suzuki Swift Sport", make: "Suzuki", country: "Japan", body: "Hatchback", decade: 2000, hp: 140, drivetrain: "FWD", engine: "I4T" },
+  { name: "Datsun 240Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 1960, hp: 151, drivetrain: "RWD", engine: "I6" },
+
+  // ═══ USA ═════════════════════════════════════════════════════════════════════
+  // Ford
+  { name: "Ford Mustang", make: "Ford", country: "USA", body: "Coupe", decade: 1960, hp: 480, drivetrain: "RWD", engine: "V8" },
+  { name: "Ford F-150", make: "Ford", country: "USA", body: "Truck", decade: 1940, hp: 400, drivetrain: "4WD", engine: "V6T" },
+  { name: "Ford Bronco", make: "Ford", country: "USA", body: "SUV", decade: 1960, hp: 300, drivetrain: "4WD", engine: "V6T" },
+  { name: "Ford GT", make: "Ford", country: "USA", body: "Coupe", decade: 2000, hp: 660, drivetrain: "RWD", engine: "V6T" },
+  { name: "Ford Maverick", make: "Ford", country: "USA", body: "Truck", decade: 2020, hp: 250, drivetrain: "AWD", engine: "I4T" },
+  { name: "Ford Explorer", make: "Ford", country: "USA", body: "SUV", decade: 1990, hp: 300, drivetrain: "AWD", engine: "I4T" },
+  { name: "Ford Focus RS", make: "Ford", country: "USA", body: "Hatchback", decade: 2000, hp: 350, drivetrain: "AWD", engine: "I4T" },
+  { name: "Ford Raptor", make: "Ford", country: "USA", body: "Truck", decade: 2010, hp: 450, drivetrain: "4WD", engine: "V6T" },
+  { name: "Ford Mustang Mach-E", make: "Ford", country: "USA", body: "SUV", decade: 2020, hp: 346, drivetrain: "AWD", engine: "EV" },
+  { name: "Shelby GT500", make: "Ford", country: "USA", body: "Coupe", decade: 2000, hp: 760, drivetrain: "RWD", engine: "V8S" },
+  { name: "Ford Focus ST", make: "Ford", country: "USA", body: "Hatchback", decade: 2010, hp: 252, drivetrain: "FWD", engine: "I4T" },
+  { name: "Ford Escape", make: "Ford", country: "USA", body: "SUV", decade: 2000, hp: 180, drivetrain: "AWD", engine: "I4" },
+  { name: "Ford Edge", make: "Ford", country: "USA", body: "SUV", decade: 2000, hp: 250, drivetrain: "AWD", engine: "I4T" },
+  { name: "Ford Expedition", make: "Ford", country: "USA", body: "SUV", decade: 1990, hp: 440, drivetrain: "4WD", engine: "V6T" },
+  { name: "Ford Fiesta ST", make: "Ford", country: "USA", body: "Hatchback", decade: 2010, hp: 197, drivetrain: "FWD", engine: "I4T" },
+  { name: "Ford Thunderbird", make: "Ford", country: "USA", body: "Convertible", decade: 1950, hp: 252, drivetrain: "RWD", engine: "V8" },
+  { name: "Ford F-150 Lightning", make: "Ford", country: "USA", body: "Truck", decade: 2020, hp: 580, drivetrain: "AWD", engine: "EV" },
+  { name: "Ford Bronco Sport", make: "Ford", country: "USA", body: "SUV", decade: 2020, hp: 250, drivetrain: "AWD", engine: "I4T" },
+  // Chevrolet
+  { name: "Chevrolet Corvette", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1950, hp: 495, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Camaro", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1960, hp: 455, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Silverado", make: "Chevrolet", country: "USA", body: "Truck", decade: 1990, hp: 355, drivetrain: "4WD", engine: "V8" },
+  { name: "Chevrolet Tahoe", make: "Chevrolet", country: "USA", body: "SUV", decade: 1990, hp: 355, drivetrain: "4WD", engine: "V8" },
+  { name: "Chevrolet Corvette Z06", make: "Chevrolet", country: "USA", body: "Coupe", decade: 2000, hp: 670, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Corvette E-Ray", make: "Chevrolet", country: "USA", body: "Coupe", decade: 2020, hp: 655, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Chevrolet El Camino", make: "Chevrolet", country: "USA", body: "Truck", decade: 1950, hp: 350, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Blazer EV", make: "Chevrolet", country: "USA", body: "SUV", decade: 2020, hp: 557, drivetrain: "AWD", engine: "EV" },
+  { name: "Chevrolet Impala", make: "Chevrolet", country: "USA", body: "Sedan", decade: 1950, hp: 305, drivetrain: "FWD", engine: "V6" },
+  { name: "Chevrolet Malibu", make: "Chevrolet", country: "USA", body: "Sedan", decade: 1960, hp: 160, drivetrain: "FWD", engine: "I4T" },
+  { name: "Chevrolet Colorado", make: "Chevrolet", country: "USA", body: "Truck", decade: 2000, hp: 312, drivetrain: "4WD", engine: "V6" },
+  { name: "Chevrolet Suburban", make: "Chevrolet", country: "USA", body: "SUV", decade: 1930, hp: 420, drivetrain: "4WD", engine: "V8" },
+  { name: "Chevrolet Equinox", make: "Chevrolet", country: "USA", body: "SUV", decade: 2000, hp: 175, drivetrain: "AWD", engine: "I4T" },
+  { name: "Chevrolet Bolt EV", make: "Chevrolet", country: "USA", body: "Hatchback", decade: 2010, hp: 200, drivetrain: "FWD", engine: "EV" },
+  { name: "Chevrolet Camaro ZL1", make: "Chevrolet", country: "USA", body: "Coupe", decade: 2010, hp: 650, drivetrain: "RWD", engine: "V8S" },
+  { name: "Chevrolet Chevelle SS", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1960, hp: 450, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Corvette Stingray (C2)", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1960, hp: 360, drivetrain: "RWD", engine: "V8" },
+  { name: "Chevrolet Equinox EV", make: "Chevrolet", country: "USA", body: "SUV", decade: 2020, hp: 290, drivetrain: "AWD", engine: "EV" },
+  // Dodge / Ram
+  { name: "Dodge Challenger", make: "Dodge", country: "USA", body: "Coupe", decade: 1960, hp: 485, drivetrain: "RWD", engine: "V8" },
+  { name: "Dodge Charger", make: "Dodge", country: "USA", body: "Sedan", decade: 1960, hp: 496, drivetrain: "RWD", engine: "V8" },
+  { name: "Dodge Viper", make: "Dodge", country: "USA", body: "Coupe", decade: 1990, hp: 645, drivetrain: "RWD", engine: "V10" },
+  { name: "Dodge Hellcat", make: "Dodge", country: "USA", body: "Coupe", decade: 2010, hp: 717, drivetrain: "RWD", engine: "V8S" },
+  { name: "Dodge Durango SRT", make: "Dodge", country: "USA", body: "SUV", decade: 2010, hp: 475, drivetrain: "AWD", engine: "V8" },
+  { name: "Dodge Demon", make: "Dodge", country: "USA", body: "Coupe", decade: 2010, hp: 840, drivetrain: "RWD", engine: "V8S" },
+  { name: "Dodge Charger Daytona EV", make: "Dodge", country: "USA", body: "Sedan", decade: 2020, hp: 670, drivetrain: "AWD", engine: "EV" },
+  { name: "Ram 1500", make: "Ram", country: "USA", body: "Truck", decade: 1980, hp: 395, drivetrain: "4WD", engine: "V8" },
+  { name: "Ram TRX", make: "Ram", country: "USA", body: "Truck", decade: 2020, hp: 702, drivetrain: "4WD", engine: "V8S" },
+  // Jeep
+  { name: "Jeep Wrangler", make: "Jeep", country: "USA", body: "SUV", decade: 1980, hp: 285, drivetrain: "4WD", engine: "V6" },
+  { name: "Jeep Grand Cherokee", make: "Jeep", country: "USA", body: "SUV", decade: 1990, hp: 293, drivetrain: "4WD", engine: "V6" },
+  { name: "Jeep Gladiator", make: "Jeep", country: "USA", body: "Truck", decade: 2010, hp: 285, drivetrain: "4WD", engine: "V6" },
+  { name: "Jeep Cherokee", make: "Jeep", country: "USA", body: "SUV", decade: 1970, hp: 270, drivetrain: "4WD", engine: "V6" },
+  { name: "Jeep Wrangler Rubicon 392", make: "Jeep", country: "USA", body: "SUV", decade: 2020, hp: 470, drivetrain: "4WD", engine: "V8" },
+  // Tesla
+  { name: "Tesla Model 3", make: "Tesla", country: "USA", body: "Sedan", decade: 2010, hp: 346, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Model S", make: "Tesla", country: "USA", body: "Sedan", decade: 2010, hp: 670, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Model Y", make: "Tesla", country: "USA", body: "SUV", decade: 2010, hp: 346, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Cybertruck", make: "Tesla", country: "USA", body: "Truck", decade: 2020, hp: 600, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Model X", make: "Tesla", country: "USA", body: "SUV", decade: 2010, hp: 670, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Model S Plaid", make: "Tesla", country: "USA", body: "Sedan", decade: 2020, hp: 1020, drivetrain: "AWD", engine: "EV" },
+  { name: "Tesla Roadster (2008)", make: "Tesla", country: "USA", body: "Convertible", decade: 2000, hp: 288, drivetrain: "RWD", engine: "EV" },
+  // Cadillac
+  { name: "Cadillac Escalade", make: "Cadillac", country: "USA", body: "SUV", decade: 1990, hp: 420, drivetrain: "4WD", engine: "V8" },
+  { name: "Cadillac CT5-V Blackwing", make: "Cadillac", country: "USA", body: "Sedan", decade: 2020, hp: 668, drivetrain: "RWD", engine: "V8S" },
+  { name: "Cadillac CT4-V Blackwing", make: "Cadillac", country: "USA", body: "Sedan", decade: 2020, hp: 472, drivetrain: "RWD", engine: "V6T" },
+  { name: "Cadillac CTS-V", make: "Cadillac", country: "USA", body: "Sedan", decade: 2000, hp: 640, drivetrain: "RWD", engine: "V8S" },
+  { name: "Cadillac Lyriq", make: "Cadillac", country: "USA", body: "SUV", decade: 2020, hp: 340, drivetrain: "AWD", engine: "EV" },
+  // Other USA
+  { name: "Lincoln Navigator", make: "Lincoln", country: "USA", body: "SUV", decade: 1990, hp: 440, drivetrain: "4WD", engine: "V6T" },
+  { name: "Lincoln Continental", make: "Lincoln", country: "USA", body: "Sedan", decade: 1930, hp: 400, drivetrain: "AWD", engine: "V6T" },
+  { name: "GMC Sierra", make: "GMC", country: "USA", body: "Truck", decade: 1960, hp: 355, drivetrain: "4WD", engine: "V8" },
+  { name: "GMC Hummer EV", make: "GMC", country: "USA", body: "Truck", decade: 2020, hp: 1000, drivetrain: "AWD", engine: "EV" },
+  { name: "GMC Yukon", make: "GMC", country: "USA", body: "SUV", decade: 1990, hp: 355, drivetrain: "4WD", engine: "V8" },
+  { name: "GMC Canyon AT4X", make: "GMC", country: "USA", body: "Truck", decade: 2020, hp: 310, drivetrain: "4WD", engine: "I4T" },
+  { name: "Pontiac GTO", make: "Pontiac", country: "USA", body: "Coupe", decade: 1960, hp: 400, drivetrain: "RWD", engine: "V8" },
+  { name: "Pontiac Firebird Trans Am", make: "Pontiac", country: "USA", body: "Coupe", decade: 1960, hp: 335, drivetrain: "RWD", engine: "V8" },
+  { name: "Buick Grand National", make: "Buick", country: "USA", body: "Coupe", decade: 1980, hp: 245, drivetrain: "RWD", engine: "V6T" },
+  { name: "DeLorean DMC-12", make: "DeLorean", country: "USA", body: "Coupe", decade: 1980, hp: 130, drivetrain: "RWD", engine: "V6" },
+  { name: "Rivian R1T", make: "Rivian", country: "USA", body: "Truck", decade: 2020, hp: 835, drivetrain: "AWD", engine: "EV" },
+  { name: "Rivian R1S", make: "Rivian", country: "USA", body: "SUV", decade: 2020, hp: 835, drivetrain: "AWD", engine: "EV" },
+  { name: "Lucid Air", make: "Lucid", country: "USA", body: "Sedan", decade: 2020, hp: 1234, drivetrain: "AWD", engine: "EV" },
+  { name: "Chrysler 300", make: "Chrysler", country: "USA", body: "Sedan", decade: 2000, hp: 292, drivetrain: "RWD", engine: "V6" },
+  { name: "Plymouth Barracuda", make: "Plymouth", country: "USA", body: "Coupe", decade: 1960, hp: 425, drivetrain: "RWD", engine: "V8" },
+  { name: "AMC Javelin", make: "AMC", country: "USA", body: "Coupe", decade: 1960, hp: 325, drivetrain: "RWD", engine: "V8" },
+  { name: "Oldsmobile 442", make: "Oldsmobile", country: "USA", body: "Coupe", decade: 1960, hp: 365, drivetrain: "RWD", engine: "V8" },
+  { name: "Saleen S7", make: "Saleen", country: "USA", body: "Coupe", decade: 2000, hp: 750, drivetrain: "RWD", engine: "V8T" },
+  { name: "Hennessey Venom GT", make: "Hennessey", country: "USA", body: "Coupe", decade: 2010, hp: 1244, drivetrain: "RWD", engine: "V8T" },
+  { name: "SSC Tuatara", make: "SSC", country: "USA", body: "Coupe", decade: 2020, hp: 1750, drivetrain: "RWD", engine: "V8T" },
+  { name: "Fisker Ocean", make: "Fisker", country: "USA", body: "SUV", decade: 2020, hp: 550, drivetrain: "AWD", engine: "EV" },
+
+  // ═══ GERMANY ════════════════════════════════════════════════════════════════
+  // BMW
+  { name: "BMW M3", make: "BMW", country: "Germany", body: "Sedan", decade: 1980, hp: 473, drivetrain: "AWD", engine: "I6T" },
+  { name: "BMW M4", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 473, drivetrain: "RWD", engine: "I6T" },
+  { name: "BMW 3 Series", make: "BMW", country: "Germany", body: "Sedan", decade: 1970, hp: 255, drivetrain: "RWD", engine: "I4T" },
+  { name: "BMW X5", make: "BMW", country: "Germany", body: "SUV", decade: 1990, hp: 335, drivetrain: "AWD", engine: "I6T" },
+  { name: "BMW M2", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 453, drivetrain: "RWD", engine: "I6T" },
+  { name: "BMW i4", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 536, drivetrain: "AWD", engine: "EV" },
+  { name: "BMW Z4", make: "BMW", country: "Germany", body: "Convertible", decade: 2000, hp: 382, drivetrain: "RWD", engine: "I6T" },
+  { name: "BMW M5", make: "BMW", country: "Germany", body: "Sedan", decade: 1980, hp: 617, drivetrain: "AWD", engine: "V8T" },
+  { name: "BMW X3", make: "BMW", country: "Germany", body: "SUV", decade: 2000, hp: 248, drivetrain: "AWD", engine: "I4T" },
+  { name: "BMW X7", make: "BMW", country: "Germany", body: "SUV", decade: 2010, hp: 375, drivetrain: "AWD", engine: "I6T" },
+  { name: "BMW 5 Series", make: "BMW", country: "Germany", body: "Sedan", decade: 1970, hp: 335, drivetrain: "AWD", engine: "I6T" },
+  { name: "BMW 7 Series", make: "BMW", country: "Germany", body: "Sedan", decade: 1970, hp: 536, drivetrain: "AWD", engine: "V8T" },
+  { name: "BMW iX", make: "BMW", country: "Germany", body: "SUV", decade: 2020, hp: 516, drivetrain: "AWD", engine: "EV" },
+  { name: "BMW M8", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 617, drivetrain: "AWD", engine: "V8T" },
+  { name: "BMW 2002", make: "BMW", country: "Germany", body: "Coupe", decade: 1960, hp: 130, drivetrain: "RWD", engine: "I4" },
+  { name: "BMW i3", make: "BMW", country: "Germany", body: "Hatchback", decade: 2010, hp: 170, drivetrain: "RWD", engine: "EV" },
+  { name: "BMW XM", make: "BMW", country: "Germany", body: "SUV", decade: 2020, hp: 738, drivetrain: "AWD", engine: "Hybrid" },
+  // Mercedes
+  { name: "Mercedes-Benz C-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 255, drivetrain: "RWD", engine: "I4T" },
+  { name: "Mercedes-AMG GT", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2010, hp: 577, drivetrain: "RWD", engine: "V8T" },
+  { name: "Mercedes-Benz G-Class", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 577, drivetrain: "4WD", engine: "V8T" },
+  { name: "Mercedes-AMG C63", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 469, drivetrain: "AWD", engine: "I4T" },
+  { name: "Mercedes-Benz SL", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, drivetrain: "AWD", engine: "I4T" },
+  { name: "Mercedes-Benz E-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 375, drivetrain: "AWD", engine: "I6T" },
+  { name: "Mercedes-Benz S-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1970, hp: 496, drivetrain: "AWD", engine: "V8T" },
+  { name: "Mercedes-AMG E63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 603, drivetrain: "AWD", engine: "V8T" },
+  { name: "Mercedes-Benz GLE", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1990, hp: 362, drivetrain: "AWD", engine: "I6T" },
+  { name: "Mercedes-Benz GLC", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 255, drivetrain: "AWD", engine: "I4T" },
+  { name: "Mercedes-AMG One", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2020, hp: 1063, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Mercedes-Benz EQS", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 649, drivetrain: "AWD", engine: "EV" },
+  { name: "Mercedes-Benz 300SL", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 1950, hp: 215, drivetrain: "RWD", engine: "I6" },
+  { name: "Mercedes-AMG GT 63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 630, drivetrain: "AWD", engine: "V8T" },
+  // Audi
+  { name: "Audi RS6 Avant", make: "Audi", country: "Germany", body: "Wagon", decade: 2000, hp: 621, drivetrain: "AWD", engine: "V8T" },
+  { name: "Audi R8", make: "Audi", country: "Germany", body: "Coupe", decade: 2000, hp: 602, drivetrain: "AWD", engine: "V10" },
+  { name: "Audi A4", make: "Audi", country: "Germany", body: "Sedan", decade: 1990, hp: 261, drivetrain: "AWD", engine: "I4T" },
+  { name: "Audi e-tron GT", make: "Audi", country: "Germany", body: "Sedan", decade: 2020, hp: 637, drivetrain: "AWD", engine: "EV" },
+  { name: "Audi TT RS", make: "Audi", country: "Germany", body: "Coupe", decade: 1990, hp: 394, drivetrain: "AWD", engine: "I5T" },
+  { name: "Audi RS3", make: "Audi", country: "Germany", body: "Sedan", decade: 2010, hp: 401, drivetrain: "AWD", engine: "I5T" },
+  { name: "Audi A6", make: "Audi", country: "Germany", body: "Sedan", decade: 1990, hp: 261, drivetrain: "AWD", engine: "I4T" },
+  { name: "Audi Q5", make: "Audi", country: "Germany", body: "SUV", decade: 2000, hp: 261, drivetrain: "AWD", engine: "I4T" },
+  { name: "Audi Q7", make: "Audi", country: "Germany", body: "SUV", decade: 2000, hp: 335, drivetrain: "AWD", engine: "V6T" },
+  { name: "Audi RS5", make: "Audi", country: "Germany", body: "Coupe", decade: 2010, hp: 444, drivetrain: "AWD", engine: "V6T" },
+  { name: "Audi RS7", make: "Audi", country: "Germany", body: "Sedan", decade: 2010, hp: 591, drivetrain: "AWD", engine: "V8T" },
+  { name: "Audi Q8 e-tron", make: "Audi", country: "Germany", body: "SUV", decade: 2020, hp: 402, drivetrain: "AWD", engine: "EV" },
+  { name: "Audi Sport Quattro", make: "Audi", country: "Germany", body: "Coupe", decade: 1980, hp: 306, drivetrain: "AWD", engine: "I5T" },
+  // Volkswagen
+  { name: "Volkswagen Golf GTI", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 1970, hp: 241, drivetrain: "FWD", engine: "I4T" },
+  { name: "Volkswagen Golf R", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 2000, hp: 315, drivetrain: "AWD", engine: "I4T" },
+  { name: "Volkswagen Beetle", make: "Volkswagen", country: "Germany", body: "Coupe", decade: 1930, hp: 170, drivetrain: "FWD", engine: "I4T" },
+  { name: "Volkswagen ID.4", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2020, hp: 282, drivetrain: "AWD", engine: "EV" },
+  { name: "Volkswagen Jetta GLI", make: "Volkswagen", country: "Germany", body: "Sedan", decade: 1980, hp: 228, drivetrain: "FWD", engine: "I4T" },
+  { name: "Volkswagen Tiguan", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2000, hp: 184, drivetrain: "AWD", engine: "I4T" },
+  { name: "Volkswagen Atlas", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2010, hp: 269, drivetrain: "AWD", engine: "V6" },
+  { name: "Volkswagen Corrado VR6", make: "Volkswagen", country: "Germany", body: "Coupe", decade: 1990, hp: 178, drivetrain: "FWD", engine: "V6" },
+  // Porsche
+  { name: "Porsche 911", make: "Porsche", country: "Germany", body: "Coupe", decade: 1960, hp: 379, drivetrain: "RWD", engine: "F6T" },
+  { name: "Porsche 911 Turbo S", make: "Porsche", country: "Germany", body: "Coupe", decade: 1970, hp: 640, drivetrain: "AWD", engine: "F6T" },
+  { name: "Porsche Cayenne", make: "Porsche", country: "Germany", body: "SUV", decade: 2000, hp: 348, drivetrain: "AWD", engine: "V6T" },
+  { name: "Porsche Taycan", make: "Porsche", country: "Germany", body: "Sedan", decade: 2010, hp: 670, drivetrain: "AWD", engine: "EV" },
+  { name: "Porsche 718 Cayman", make: "Porsche", country: "Germany", body: "Coupe", decade: 2010, hp: 300, drivetrain: "RWD", engine: "F4T" },
+  { name: "Porsche Macan", make: "Porsche", country: "Germany", body: "SUV", decade: 2010, hp: 348, drivetrain: "AWD", engine: "I4T" },
+  { name: "Porsche 911 GT3", make: "Porsche", country: "Germany", body: "Coupe", decade: 1990, hp: 502, drivetrain: "RWD", engine: "F6" },
+  { name: "Porsche 918 Spyder", make: "Porsche", country: "Germany", body: "Convertible", decade: 2010, hp: 887, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Porsche Panamera", make: "Porsche", country: "Germany", body: "Sedan", decade: 2000, hp: 473, drivetrain: "AWD", engine: "V8T" },
+  { name: "Porsche 911 GT2 RS", make: "Porsche", country: "Germany", body: "Coupe", decade: 2000, hp: 700, drivetrain: "RWD", engine: "F6T" },
+  { name: "Porsche Carrera GT", make: "Porsche", country: "Germany", body: "Convertible", decade: 2000, hp: 612, drivetrain: "RWD", engine: "V10" },
+  { name: "Porsche 944", make: "Porsche", country: "Germany", body: "Coupe", decade: 1980, hp: 217, drivetrain: "RWD", engine: "I4T" },
+  { name: "Porsche Boxster", make: "Porsche", country: "Germany", body: "Convertible", decade: 1990, hp: 300, drivetrain: "RWD", engine: "F4T" },
+  // Other Germany
+  { name: "Opel Corsa OPC", make: "Opel", country: "Germany", body: "Hatchback", decade: 2000, hp: 207, drivetrain: "FWD", engine: "I4T" },
+
+  // ═══ ITALY ══════════════════════════════════════════════════════════════════
+  { name: "Ferrari 488 GTB", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 661, drivetrain: "RWD", engine: "V8T" },
+  { name: "Ferrari F40", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1980, hp: 478, drivetrain: "RWD", engine: "V8T" },
+  { name: "Ferrari 296 GTB", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 818, drivetrain: "RWD", engine: "Hybrid" },
+  { name: "Ferrari SF90 Stradale", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 986, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Ferrari Roma", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 612, drivetrain: "RWD", engine: "V8T" },
+  { name: "Ferrari Testarossa", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1980, hp: 390, drivetrain: "RWD", engine: "F12" },
+  { name: "Ferrari 458 Italia", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2000, hp: 562, drivetrain: "RWD", engine: "V8" },
+  { name: "Ferrari F50", make: "Ferrari", country: "Italy", body: "Convertible", decade: 1990, hp: 513, drivetrain: "RWD", engine: "V12" },
+  { name: "Ferrari Enzo", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2000, hp: 651, drivetrain: "RWD", engine: "V12" },
+  { name: "Ferrari LaFerrari", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 950, drivetrain: "RWD", engine: "Hybrid" },
+  { name: "Ferrari 812 Superfast", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 789, drivetrain: "RWD", engine: "V12" },
+  { name: "Ferrari Purosangue", make: "Ferrari", country: "Italy", body: "SUV", decade: 2020, hp: 715, drivetrain: "AWD", engine: "V12" },
+  { name: "Ferrari 250 GTO", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1960, hp: 300, drivetrain: "RWD", engine: "V12" },
+  { name: "Lamborghini Huracán", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2010, hp: 631, drivetrain: "AWD", engine: "V10" },
+  { name: "Lamborghini Aventador", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2010, hp: 730, drivetrain: "AWD", engine: "V12" },
+  { name: "Lamborghini Urus", make: "Lamborghini", country: "Italy", body: "SUV", decade: 2010, hp: 641, drivetrain: "AWD", engine: "V8T" },
+  { name: "Lamborghini Countach", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 1970, hp: 375, drivetrain: "RWD", engine: "V12" },
+  { name: "Lamborghini Gallardo", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2000, hp: 552, drivetrain: "AWD", engine: "V10" },
+  { name: "Lamborghini Diablo", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 1990, hp: 492, drivetrain: "RWD", engine: "V12" },
+  { name: "Lamborghini Miura", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 1960, hp: 350, drivetrain: "RWD", engine: "V12" },
+  { name: "Lamborghini Revuelto", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 1001, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Maserati MC20", make: "Maserati", country: "Italy", body: "Coupe", decade: 2020, hp: 621, drivetrain: "RWD", engine: "V6T" },
+  { name: "Maserati GranTurismo", make: "Maserati", country: "Italy", body: "Coupe", decade: 2000, hp: 454, drivetrain: "RWD", engine: "V8" },
+  { name: "Maserati Ghibli", make: "Maserati", country: "Italy", body: "Sedan", decade: 2010, hp: 345, drivetrain: "RWD", engine: "V6T" },
+  { name: "Alfa Romeo Giulia Quadrifoglio", make: "Alfa Romeo", country: "Italy", body: "Sedan", decade: 2010, hp: 505, drivetrain: "RWD", engine: "V6T" },
+  { name: "Alfa Romeo 4C", make: "Alfa Romeo", country: "Italy", body: "Coupe", decade: 2010, hp: 237, drivetrain: "RWD", engine: "I4T" },
+  { name: "Alfa Romeo Stelvio Quadrifoglio", make: "Alfa Romeo", country: "Italy", body: "SUV", decade: 2010, hp: 505, drivetrain: "AWD", engine: "V6T" },
+  { name: "Fiat 500", make: "Fiat", country: "Italy", body: "Hatchback", decade: 1950, hp: 135, drivetrain: "FWD", engine: "I4T" },
+  { name: "Fiat 124 Spider", make: "Fiat", country: "Italy", body: "Convertible", decade: 2010, hp: 160, drivetrain: "RWD", engine: "I4T" },
+  { name: "Pagani Huayra", make: "Pagani", country: "Italy", body: "Coupe", decade: 2010, hp: 730, drivetrain: "RWD", engine: "V12T" },
+  { name: "Pagani Zonda", make: "Pagani", country: "Italy", body: "Coupe", decade: 1990, hp: 555, drivetrain: "RWD", engine: "V12" },
+  { name: "De Tomaso Pantera", make: "De Tomaso", country: "Italy", body: "Coupe", decade: 1970, hp: 330, drivetrain: "RWD", engine: "V8" },
+  { name: "Lancia Stratos", make: "Lancia", country: "Italy", body: "Coupe", decade: 1970, hp: 190, drivetrain: "RWD", engine: "V6" },
+  { name: "Lancia Delta Integrale", make: "Lancia", country: "Italy", body: "Hatchback", decade: 1970, hp: 210, drivetrain: "AWD", engine: "I4T" },
+
+  // ═══ UK ══════════════════════════════════════════════════════════════════════
+  { name: "McLaren 720S", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 710, drivetrain: "RWD", engine: "V8T" },
+  { name: "McLaren F1", make: "McLaren", country: "UK", body: "Coupe", decade: 1990, hp: 618, drivetrain: "RWD", engine: "V12" },
+  { name: "McLaren Artura", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 671, drivetrain: "RWD", engine: "Hybrid" },
+  { name: "McLaren P1", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 903, drivetrain: "RWD", engine: "Hybrid" },
+  { name: "McLaren 570S", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 562, drivetrain: "RWD", engine: "V8T" },
+  { name: "McLaren 600LT", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 592, drivetrain: "RWD", engine: "V8T" },
+  { name: "Aston Martin Vantage", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2000, hp: 656, drivetrain: "RWD", engine: "V8T" },
+  { name: "Aston Martin DB11", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2010, hp: 630, drivetrain: "RWD", engine: "V8T" },
+  { name: "Aston Martin DBS Superleggera", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2010, hp: 715, drivetrain: "RWD", engine: "V12T" },
+  { name: "Aston Martin Valkyrie", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 1160, drivetrain: "RWD", engine: "Hybrid" },
+  { name: "Aston Martin DBX", make: "Aston Martin", country: "UK", body: "SUV", decade: 2020, hp: 697, drivetrain: "AWD", engine: "V8T" },
+  { name: "Aston Martin DB5", make: "Aston Martin", country: "UK", body: "Coupe", decade: 1960, hp: 282, drivetrain: "RWD", engine: "I6" },
+  { name: "Bentley Continental GT", make: "Bentley", country: "UK", body: "Coupe", decade: 2000, hp: 650, drivetrain: "AWD", engine: "V8T" },
+  { name: "Bentley Bentayga", make: "Bentley", country: "UK", body: "SUV", decade: 2010, hp: 542, drivetrain: "AWD", engine: "V8T" },
+  { name: "Bentley Flying Spur", make: "Bentley", country: "UK", body: "Sedan", decade: 2000, hp: 626, drivetrain: "AWD", engine: "W12T" },
+  { name: "Rolls-Royce Ghost", make: "Rolls-Royce", country: "UK", body: "Sedan", decade: 2000, hp: 563, drivetrain: "AWD", engine: "V12T" },
+  { name: "Rolls-Royce Phantom", make: "Rolls-Royce", country: "UK", body: "Sedan", decade: 2000, hp: 563, drivetrain: "RWD", engine: "V12T" },
+  { name: "Rolls-Royce Cullinan", make: "Rolls-Royce", country: "UK", body: "SUV", decade: 2010, hp: 563, drivetrain: "AWD", engine: "V12T" },
+  { name: "Rolls-Royce Spectre", make: "Rolls-Royce", country: "UK", body: "Coupe", decade: 2020, hp: 577, drivetrain: "AWD", engine: "EV" },
+  { name: "Jaguar F-Type", make: "Jaguar", country: "UK", body: "Coupe", decade: 2010, hp: 575, drivetrain: "AWD", engine: "V8S" },
+  { name: "Jaguar E-Type", make: "Jaguar", country: "UK", body: "Coupe", decade: 1960, hp: 265, drivetrain: "RWD", engine: "I6" },
+  { name: "Jaguar XJ220", make: "Jaguar", country: "UK", body: "Coupe", decade: 1990, hp: 542, drivetrain: "RWD", engine: "V6T" },
+  { name: "Jaguar I-PACE", make: "Jaguar", country: "UK", body: "SUV", decade: 2010, hp: 394, drivetrain: "AWD", engine: "EV" },
+  { name: "Land Rover Defender", make: "Land Rover", country: "UK", body: "SUV", decade: 1940, hp: 395, drivetrain: "4WD", engine: "I6T" },
+  { name: "Range Rover", make: "Land Rover", country: "UK", body: "SUV", decade: 1970, hp: 523, drivetrain: "4WD", engine: "V8T" },
+  { name: "Range Rover Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2000, hp: 395, drivetrain: "4WD", engine: "I6T" },
+  { name: "Land Rover Discovery", make: "Land Rover", country: "UK", body: "SUV", decade: 1980, hp: 296, drivetrain: "4WD", engine: "I6T" },
+  { name: "Lotus Emira", make: "Lotus", country: "UK", body: "Coupe", decade: 2020, hp: 400, drivetrain: "RWD", engine: "V6S" },
+  { name: "Lotus Elise", make: "Lotus", country: "UK", body: "Convertible", decade: 1990, hp: 217, drivetrain: "RWD", engine: "I4S" },
+  { name: "Lotus Evija", make: "Lotus", country: "UK", body: "Coupe", decade: 2020, hp: 1972, drivetrain: "AWD", engine: "EV" },
+  { name: "Lotus Exige", make: "Lotus", country: "UK", body: "Coupe", decade: 2000, hp: 410, drivetrain: "RWD", engine: "V6S" },
+  { name: "Lotus Esprit", make: "Lotus", country: "UK", body: "Coupe", decade: 1970, hp: 264, drivetrain: "RWD", engine: "I4T" },
+  { name: "Mini Cooper", make: "Mini", country: "UK", body: "Hatchback", decade: 1950, hp: 189, drivetrain: "FWD", engine: "I4T" },
+  { name: "Mini Cooper JCW", make: "Mini", country: "UK", body: "Hatchback", decade: 2000, hp: 301, drivetrain: "FWD", engine: "I4T" },
+  { name: "Morgan Plus Six", make: "Morgan", country: "UK", body: "Convertible", decade: 2010, hp: 335, drivetrain: "RWD", engine: "I6T" },
+  { name: "TVR Griffith", make: "TVR", country: "UK", body: "Coupe", decade: 2010, hp: 500, drivetrain: "RWD", engine: "V8" },
+  { name: "Ariel Atom", make: "Ariel", country: "UK", body: "Convertible", decade: 2000, hp: 310, drivetrain: "RWD", engine: "I4T" },
+  { name: "Caterham Seven", make: "Caterham", country: "UK", body: "Convertible", decade: 1970, hp: 240, drivetrain: "RWD", engine: "I4" },
+  { name: "Noble M600", make: "Noble", country: "UK", body: "Coupe", decade: 2000, hp: 650, drivetrain: "RWD", engine: "V8T" },
+  { name: "Gordon Murray T.50", make: "Gordon Murray", country: "UK", body: "Coupe", decade: 2020, hp: 654, drivetrain: "RWD", engine: "V12" },
+
+  // ═══ SOUTH KOREA ════════════════════════════════════════════════════════════
+  { name: "Hyundai Ioniq 5", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 320, drivetrain: "AWD", engine: "EV" },
+  { name: "Hyundai Elantra N", make: "Hyundai", country: "South Korea", body: "Sedan", decade: 2020, hp: 276, drivetrain: "FWD", engine: "I4T" },
+  { name: "Hyundai Tucson", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2000, hp: 187, drivetrain: "AWD", engine: "I4" },
+  { name: "Hyundai Ioniq 6", make: "Hyundai", country: "South Korea", body: "Sedan", decade: 2020, hp: 320, drivetrain: "AWD", engine: "EV" },
+  { name: "Hyundai Santa Fe", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2000, hp: 277, drivetrain: "AWD", engine: "I4T" },
+  { name: "Hyundai Sonata", make: "Hyundai", country: "South Korea", body: "Sedan", decade: 1980, hp: 191, drivetrain: "FWD", engine: "I4T" },
+  { name: "Hyundai Palisade", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2010, hp: 291, drivetrain: "AWD", engine: "V6" },
+  { name: "Hyundai Veloster N", make: "Hyundai", country: "South Korea", body: "Hatchback", decade: 2010, hp: 275, drivetrain: "FWD", engine: "I4T" },
+  { name: "Hyundai Kona", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2010, hp: 147, drivetrain: "AWD", engine: "I4" },
+  { name: "Hyundai Ioniq 5 N", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 601, drivetrain: "AWD", engine: "EV" },
+  { name: "Kia EV6", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 576, drivetrain: "AWD", engine: "EV" },
+  { name: "Kia Stinger", make: "Kia", country: "South Korea", body: "Sedan", decade: 2010, hp: 368, drivetrain: "AWD", engine: "V6T" },
+  { name: "Kia Telluride", make: "Kia", country: "South Korea", body: "SUV", decade: 2010, hp: 291, drivetrain: "AWD", engine: "V6" },
+  { name: "Kia Sportage", make: "Kia", country: "South Korea", body: "SUV", decade: 1990, hp: 187, drivetrain: "AWD", engine: "I4T" },
+  { name: "Kia Sorento", make: "Kia", country: "South Korea", body: "SUV", decade: 2000, hp: 281, drivetrain: "AWD", engine: "V6" },
+  { name: "Kia EV9", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 379, drivetrain: "AWD", engine: "EV" },
+  { name: "Kia K5", make: "Kia", country: "South Korea", body: "Sedan", decade: 2020, hp: 290, drivetrain: "AWD", engine: "I4T" },
+  { name: "Genesis G70", make: "Genesis", country: "South Korea", body: "Sedan", decade: 2010, hp: 365, drivetrain: "AWD", engine: "V6T" },
+  { name: "Genesis GV70", make: "Genesis", country: "South Korea", body: "SUV", decade: 2020, hp: 375, drivetrain: "AWD", engine: "V6T" },
+  { name: "Genesis G80", make: "Genesis", country: "South Korea", body: "Sedan", decade: 2010, hp: 375, drivetrain: "AWD", engine: "V6T" },
+  { name: "Genesis GV80", make: "Genesis", country: "South Korea", body: "SUV", decade: 2020, hp: 375, drivetrain: "AWD", engine: "V6T" },
+  { name: "Genesis G90", make: "Genesis", country: "South Korea", body: "Sedan", decade: 2010, hp: 409, drivetrain: "AWD", engine: "V6T" },
+  { name: "Genesis GV60", make: "Genesis", country: "South Korea", body: "SUV", decade: 2020, hp: 429, drivetrain: "AWD", engine: "EV" },
+
+  // ═══ SWEDEN ═════════════════════════════════════════════════════════════════
+  { name: "Volvo XC90", make: "Volvo", country: "Sweden", body: "SUV", decade: 2000, hp: 455, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Volvo S60", make: "Volvo", country: "Sweden", body: "Sedan", decade: 2000, hp: 247, drivetrain: "FWD", engine: "I4T" },
+  { name: "Volvo XC60", make: "Volvo", country: "Sweden", body: "SUV", decade: 2000, hp: 247, drivetrain: "AWD", engine: "I4T" },
+  { name: "Volvo XC40 Recharge", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 402, drivetrain: "AWD", engine: "EV" },
+  { name: "Volvo V60", make: "Volvo", country: "Sweden", body: "Wagon", decade: 2010, hp: 316, drivetrain: "AWD", engine: "I4T" },
+  { name: "Volvo V90 Cross Country", make: "Volvo", country: "Sweden", body: "Wagon", decade: 2010, hp: 295, drivetrain: "AWD", engine: "I4T" },
+  { name: "Volvo EX30", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 422, drivetrain: "AWD", engine: "EV" },
+  { name: "Polestar 2", make: "Polestar", country: "Sweden", body: "Sedan", decade: 2020, hp: 408, drivetrain: "AWD", engine: "EV" },
+  { name: "Polestar 1", make: "Polestar", country: "Sweden", body: "Coupe", decade: 2010, hp: 619, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Koenigsegg Jesko", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2020, hp: 1600, drivetrain: "RWD", engine: "V8T" },
+  { name: "Koenigsegg Agera RS", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2010, hp: 1341, drivetrain: "RWD", engine: "V8T" },
+  { name: "Koenigsegg Gemera", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2020, hp: 1700, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Saab 9-3 Aero", make: "Saab", country: "Sweden", body: "Sedan", decade: 2000, hp: 250, drivetrain: "FWD", engine: "I4T" },
+
+  // ═══ FRANCE ═════════════════════════════════════════════════════════════════
+  { name: "Bugatti Chiron", make: "Bugatti", country: "France", body: "Coupe", decade: 2010, hp: 1479, drivetrain: "AWD", engine: "W16T" },
+  { name: "Bugatti Veyron", make: "Bugatti", country: "France", body: "Coupe", decade: 2000, hp: 1001, drivetrain: "AWD", engine: "W16T" },
+  { name: "Bugatti Tourbillon", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1775, drivetrain: "AWD", engine: "Hybrid" },
+  { name: "Renault Mégane RS", make: "Renault", country: "France", body: "Hatchback", decade: 2000, hp: 300, drivetrain: "FWD", engine: "I4T" },
+  { name: "Alpine A110", make: "Alpine", country: "France", body: "Coupe", decade: 2010, hp: 296, drivetrain: "RWD", engine: "I4T" },
+  { name: "Peugeot 308 GTi", make: "Peugeot", country: "France", body: "Hatchback", decade: 2010, hp: 270, drivetrain: "FWD", engine: "I4T" },
+  { name: "Citroën DS", make: "Citroën", country: "France", body: "Sedan", decade: 1950, hp: 109, drivetrain: "FWD", engine: "I4" },
+  { name: "Renault Clio RS", make: "Renault", country: "France", body: "Hatchback", decade: 1990, hp: 220, drivetrain: "FWD", engine: "I4T" },
+  { name: "Peugeot 205 GTI", make: "Peugeot", country: "France", body: "Hatchback", decade: 1980, hp: 130, drivetrain: "FWD", engine: "I4" },
+
+  // ═══ NEW ADDITIONS FROM EXPANDED DATABASE ══════════════════════════════════
+  // ── USA (New) ──
+  // Buick
+  { name: "Buick Enclave", make: "Buick", country: "USA", body: "SUV", decade: 2000, hp: 310, engine: "V6" },
+  { name: "Buick Encore GX", make: "Buick", country: "USA", body: "SUV", decade: 2020, hp: 155, engine: "I3T" },
+  { name: "Buick Envista", make: "Buick", country: "USA", body: "SUV", decade: 2020, hp: 137, engine: "I4T" },
+  { name: "Buick Regal GS", make: "Buick", country: "USA", body: "Sedan", decade: 2010, hp: 310, engine: "V6T" },
+  // Cadillac
+  { name: "Cadillac Escalade-V", make: "Cadillac", country: "USA", body: "SUV", decade: 2020, hp: 682, engine: "V8T" },
+  { name: "Cadillac CT4", make: "Cadillac", country: "USA", body: "Sedan", decade: 2020, hp: 237, engine: "I4T" },
+  { name: "Cadillac CT5", make: "Cadillac", country: "USA", body: "Sedan", decade: 2020, hp: 237, engine: "I4T" },
+  { name: "Cadillac XT4", make: "Cadillac", country: "USA", body: "SUV", decade: 2010, hp: 235, engine: "I4T" },
+  { name: "Cadillac XT5", make: "Cadillac", country: "USA", body: "SUV", decade: 2010, hp: 310, engine: "V6" },
+  { name: "Cadillac XT6", make: "Cadillac", country: "USA", body: "SUV", decade: 2020, hp: 310, engine: "V6" },
+  { name: "Cadillac ATS-V", make: "Cadillac", country: "USA", body: "Sedan", decade: 2010, hp: 464, engine: "V6T" },
+  { name: "Cadillac Celestiq", make: "Cadillac", country: "USA", body: "Sedan", decade: 2020, hp: 600, engine: "EV" },
+  // Chevrolet
+  { name: "Chevrolet Corvette ZR1", make: "Chevrolet", country: "USA", body: "Coupe", decade: 2000, hp: 1064, engine: "V8T" },
+  { name: "Chevrolet Corvette Stingray", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1960, hp: 495, engine: "V8" },
+  { name: "Chevrolet Camaro SS", make: "Chevrolet", country: "USA", body: "Coupe", decade: 1960, hp: 455, engine: "V8" },
+  { name: "Chevrolet Silverado 1500", make: "Chevrolet", country: "USA", body: "Truck", decade: 1990, hp: 420, engine: "V8" },
+  { name: "Chevrolet Silverado 2500HD", make: "Chevrolet", country: "USA", body: "Truck", decade: 2000, hp: 401, engine: "V8T" },
+  { name: "Chevrolet Silverado EV", make: "Chevrolet", country: "USA", body: "Truck", decade: 2020, hp: 664, engine: "EV" },
+  { name: "Chevrolet Colorado ZR2", make: "Chevrolet", country: "USA", body: "Truck", decade: 2010, hp: 310, engine: "I4T" },
+  { name: "Chevrolet Blazer", make: "Chevrolet", country: "USA", body: "SUV", decade: 1960, hp: 308, engine: "V6" },
+  { name: "Chevrolet Traverse", make: "Chevrolet", country: "USA", body: "SUV", decade: 2000, hp: 315, engine: "V6" },
+  { name: "Chevrolet Trax", make: "Chevrolet", country: "USA", body: "SUV", decade: 2010, hp: 137, engine: "I4T" },
+  { name: "Chevrolet Impala SS", make: "Chevrolet", country: "USA", body: "Sedan", decade: 1960, hp: 425, engine: "V8" },
+  { name: "Chevrolet Bolt EUV", make: "Chevrolet", country: "USA", body: "SUV", decade: 2020, hp: 200, engine: "EV" },
+  { name: "Chevrolet SS", make: "Chevrolet", country: "USA", body: "Sedan", decade: 2010, hp: 415, engine: "V8" },
+  // Chrysler
+  { name: "Chrysler 300 SRT8", make: "Chrysler", country: "USA", body: "Sedan", decade: 2000, hp: 470, engine: "V8" },
+  { name: "Chrysler Pacifica", make: "Chrysler", country: "USA", body: "Van", decade: 2010, hp: 287, engine: "V6" },
+  { name: "Chrysler Pacifica Hybrid", make: "Chrysler", country: "USA", body: "Van", decade: 2010, hp: 260, engine: "Hybrid" },
+  { name: "Chrysler Airflow Concept", make: "Chrysler", country: "USA", body: "SUV", decade: 2020, hp: 402, engine: "EV" },
+  // Dodge
+  { name: "Dodge Challenger SRT Hellcat", make: "Dodge", country: "USA", body: "Coupe", decade: 2010, hp: 717, engine: "V8T" },
+  { name: "Dodge Challenger SRT Demon 170", make: "Dodge", country: "USA", body: "Coupe", decade: 2020, hp: 1025, engine: "V8T" },
+  { name: "Dodge Challenger R/T", make: "Dodge", country: "USA", body: "Coupe", decade: 2000, hp: 375, engine: "V8" },
+  { name: "Dodge Charger SRT Hellcat", make: "Dodge", country: "USA", body: "Sedan", decade: 2010, hp: 717, engine: "V8T" },
+  { name: "Dodge Charger R/T", make: "Dodge", country: "USA", body: "Sedan", decade: 2000, hp: 370, engine: "V8" },
+  { name: "Dodge Durango SRT Hellcat", make: "Dodge", country: "USA", body: "SUV", decade: 2020, hp: 710, engine: "V8T" },
+  { name: "Dodge Hornet", make: "Dodge", country: "USA", body: "SUV", decade: 2020, hp: 288, engine: "Hybrid" },
+  // Ford
+  { name: "Ford Mustang GT", make: "Ford", country: "USA", body: "Coupe", decade: 2000, hp: 480, engine: "V8" },
+  { name: "Ford Mustang EcoBoost", make: "Ford", country: "USA", body: "Coupe", decade: 2010, hp: 310, engine: "I4T" },
+  { name: "Ford F-150 Raptor", make: "Ford", country: "USA", body: "Truck", decade: 2010, hp: 450, engine: "V6T" },
+  { name: "Ford F-150 Raptor R", make: "Ford", country: "USA", body: "Truck", decade: 2020, hp: 720, engine: "V8" },
+  { name: "Ford F-250 Super Duty", make: "Ford", country: "USA", body: "Truck", decade: 1990, hp: 475, engine: "V8T" },
+  { name: "Ford Ranger", make: "Ford", country: "USA", body: "Truck", decade: 1980, hp: 270, engine: "I4T" },
+  { name: "Ford Fusion", make: "Ford", country: "USA", body: "Sedan", decade: 2000, hp: 175, engine: "I4" },
+  { name: "Ford Taurus", make: "Ford", country: "USA", body: "Sedan", decade: 1980, hp: 288, engine: "V6T" },
+  { name: "Ford Crown Victoria", make: "Ford", country: "USA", body: "Sedan", decade: 1990, hp: 224, engine: "V8" },
+  { name: "Ford GT40", make: "Ford", country: "USA", body: "Coupe", decade: 1960, hp: 485, engine: "V8" },
+  // Ford (Shelby)
+  { name: "Ford (Shelby) Mustang Shelby GT500", make: "Ford (Shelby)", country: "USA", body: "Coupe", decade: 2000, hp: 760, engine: "V8" },
+  { name: "Ford (Shelby) Mustang Shelby GT350", make: "Ford (Shelby)", country: "USA", body: "Coupe", decade: 2010, hp: 526, engine: "V8" },
+  // GMC
+  { name: "GMC Sierra 1500", make: "GMC", country: "USA", body: "Truck", decade: 1990, hp: 420, engine: "V8" },
+  { name: "GMC Sierra 1500 AT4X", make: "GMC", country: "USA", body: "Truck", decade: 2020, hp: 420, engine: "V8" },
+  { name: "GMC Sierra 2500HD", make: "GMC", country: "USA", body: "Truck", decade: 2000, hp: 401, engine: "V8T" },
+  { name: "GMC Sierra EV Denali", make: "GMC", country: "USA", body: "Truck", decade: 2020, hp: 754, engine: "EV" },
+  { name: "GMC Canyon", make: "GMC", country: "USA", body: "Truck", decade: 2000, hp: 310, engine: "I4T" },
+  { name: "GMC Yukon Denali", make: "GMC", country: "USA", body: "SUV", decade: 2000, hp: 420, engine: "V8" },
+  { name: "GMC Terrain", make: "GMC", country: "USA", body: "SUV", decade: 2010, hp: 175, engine: "I4T" },
+  { name: "GMC Acadia", make: "GMC", country: "USA", body: "SUV", decade: 2000, hp: 310, engine: "I4T" },
+  { name: "GMC Hummer EV Pickup", make: "GMC", country: "USA", body: "Truck", decade: 2020, hp: 1000, engine: "EV" },
+  { name: "GMC Hummer EV SUV", make: "GMC", country: "USA", body: "SUV", decade: 2020, hp: 830, engine: "EV" },
+  // Hennessey
+  { name: "Hennessey Venom F5", make: "Hennessey", country: "USA", body: "Coupe", decade: 2020, hp: 1817, engine: "V8T" },
+  { name: "Hennessey Venom F5 Revolution", make: "Hennessey", country: "USA", body: "Coupe", decade: 2020, hp: 1817, engine: "V8T" },
+  // Jeep
+  { name: "Jeep Grand Cherokee Trackhawk", make: "Jeep", country: "USA", body: "SUV", decade: 2010, hp: 707, engine: "V8T" },
+  { name: "Jeep Grand Cherokee 4xe", make: "Jeep", country: "USA", body: "SUV", decade: 2020, hp: 375, engine: "Hybrid" },
+  { name: "Jeep Compass", make: "Jeep", country: "USA", body: "SUV", decade: 2000, hp: 200, engine: "I4T" },
+  { name: "Jeep Renegade", make: "Jeep", country: "USA", body: "SUV", decade: 2010, hp: 180, engine: "I4T" },
+  { name: "Jeep Wagoneer", make: "Jeep", country: "USA", body: "SUV", decade: 1960, hp: 510, engine: "V8T" },
+  { name: "Jeep Grand Wagoneer", make: "Jeep", country: "USA", body: "SUV", decade: 1960, hp: 510, engine: "V8T" },
+  // Lincoln
+  { name: "Lincoln Aviator", make: "Lincoln", country: "USA", body: "SUV", decade: 2000, hp: 400, engine: "V6T" },
+  { name: "Lincoln Corsair", make: "Lincoln", country: "USA", body: "SUV", decade: 2020, hp: 295, engine: "I4T" },
+  { name: "Lincoln Nautilus", make: "Lincoln", country: "USA", body: "SUV", decade: 2010, hp: 250, engine: "I4T" },
+  { name: "Lincoln Town Car", make: "Lincoln", country: "USA", body: "Sedan", decade: 1980, hp: 239, engine: "V8" },
+  // Lucid
+  { name: "Lucid Air Pure", make: "Lucid", country: "USA", body: "Sedan", decade: 2020, hp: 480, engine: "EV" },
+  { name: "Lucid Air Touring", make: "Lucid", country: "USA", body: "Sedan", decade: 2020, hp: 620, engine: "EV" },
+  { name: "Lucid Air Grand Touring", make: "Lucid", country: "USA", body: "Sedan", decade: 2020, hp: 819, engine: "EV" },
+  { name: "Lucid Air Sapphire", make: "Lucid", country: "USA", body: "Sedan", decade: 2020, hp: 1234, engine: "EV" },
+  { name: "Lucid Gravity", make: "Lucid", country: "USA", body: "SUV", decade: 2020, hp: 828, engine: "EV" },
+  // Ram
+  { name: "Ram 1500 TRX", make: "Ram", country: "USA", body: "Truck", decade: 2020, hp: 702, engine: "V8T" },
+  { name: "Ram 1500 REV", make: "Ram", country: "USA", body: "Truck", decade: 2020, hp: 654, engine: "EV" },
+  { name: "Ram 2500 Power Wagon", make: "Ram", country: "USA", body: "Truck", decade: 2000, hp: 410, engine: "V8" },
+  { name: "Ram 3500", make: "Ram", country: "USA", body: "Truck", decade: 2000, hp: 420, engine: "I6T" },
+  { name: "Ram ProMaster", make: "Ram", country: "USA", body: "Van", decade: 2010, hp: 276, engine: "V6" },
+  // Rivian
+  { name: "Rivian R2", make: "Rivian", country: "USA", body: "SUV", decade: 2020, hp: 500, engine: "EV" },
+  { name: "Rivian R3", make: "Rivian", country: "USA", body: "SUV", decade: 2020, hp: 450, engine: "EV" },
+  // SSC
+  { name: "SSC Ultimate Aero", make: "SSC", country: "USA", body: "Coupe", decade: 2000, hp: 1287, engine: "V8T" },
+  // Tesla
+  { name: "Tesla Model 3 Performance", make: "Tesla", country: "USA", body: "Sedan", decade: 2010, hp: 510, engine: "EV" },
+  { name: "Tesla Model X Plaid", make: "Tesla", country: "USA", body: "SUV", decade: 2020, hp: 1020, engine: "EV" },
+  { name: "Tesla Model Y Performance", make: "Tesla", country: "USA", body: "SUV", decade: 2020, hp: 510, engine: "EV" },
+  { name: "Tesla Cybertruck Cyberbeast", make: "Tesla", country: "USA", body: "Truck", decade: 2020, hp: 845, engine: "EV" },
+  { name: "Tesla Roadster (2025)", make: "Tesla", country: "USA", body: "Coupe", decade: 2020, hp: 1000, engine: "EV" },
+  // ── JAPAN (New) ──
+  // Acura
+  { name: "Acura Integra Type S", make: "Acura", country: "Japan", body: "Hatchback", decade: 2020, hp: 320, engine: "I4T" },
+  { name: "Acura TLX", make: "Acura", country: "Japan", body: "Sedan", decade: 2010, hp: 272, engine: "V6" },
+  { name: "Acura MDX Type S", make: "Acura", country: "Japan", body: "SUV", decade: 2020, hp: 355, engine: "V6T" },
+  { name: "Acura RDX", make: "Acura", country: "Japan", body: "SUV", decade: 2000, hp: 272, engine: "I4T" },
+  { name: "Acura NSX Type S", make: "Acura", country: "Japan", body: "Coupe", decade: 2020, hp: 600, engine: "Hybrid" },
+  { name: "Acura ZDX", make: "Acura", country: "Japan", body: "SUV", decade: 2020, hp: 500, engine: "EV" },
+  // Honda
+  { name: "Honda Civic Si", make: "Honda", country: "Japan", body: "Sedan", decade: 1980, hp: 200, engine: "I4T" },
+  { name: "Honda CR-V Hybrid", make: "Honda", country: "Japan", body: "SUV", decade: 2020, hp: 204, engine: "Hybrid" },
+  { name: "Honda Passport", make: "Honda", country: "Japan", body: "SUV", decade: 1990, hp: 285, engine: "V6" },
+  { name: "Honda NSX", make: "Honda", country: "Japan", body: "Coupe", decade: 1990, hp: 573, engine: "Hybrid" },
+  { name: "Honda NSX Type S", make: "Honda", country: "Japan", body: "Coupe", decade: 2020, hp: 600, engine: "Hybrid" },
+  { name: "Honda Integra", make: "Honda", country: "Japan", body: "Hatchback", decade: 1980, hp: 200, engine: "I4T" },
+  { name: "Honda Prologue", make: "Honda", country: "Japan", body: "SUV", decade: 2020, hp: 288, engine: "EV" },
+  // Infiniti
+  { name: "Infiniti Q60 Red Sport", make: "Infiniti", country: "Japan", body: "Coupe", decade: 2010, hp: 400, engine: "V6T" },
+  { name: "Infiniti QX50", make: "Infiniti", country: "Japan", body: "SUV", decade: 2010, hp: 268, engine: "I4T" },
+  { name: "Infiniti QX55", make: "Infiniti", country: "Japan", body: "SUV", decade: 2020, hp: 268, engine: "I4T" },
+  { name: "Infiniti QX60", make: "Infiniti", country: "Japan", body: "SUV", decade: 2010, hp: 295, engine: "V6" },
+  { name: "Infiniti QX80", make: "Infiniti", country: "Japan", body: "SUV", decade: 2000, hp: 450, engine: "V6T" },
+  { name: "Infiniti G37", make: "Infiniti", country: "Japan", body: "Coupe", decade: 2000, hp: 330, engine: "V6" },
+  // Lexus
+  { name: "Lexus LC 500 Convertible", make: "Lexus", country: "Japan", body: "Convertible", decade: 2020, hp: 471, engine: "V8" },
+  { name: "Lexus IS 500", make: "Lexus", country: "Japan", body: "Sedan", decade: 2020, hp: 472, engine: "V8" },
+  { name: "Lexus IS 350", make: "Lexus", country: "Japan", body: "Sedan", decade: 2000, hp: 311, engine: "V6" },
+  { name: "Lexus ES 350", make: "Lexus", country: "Japan", body: "Sedan", decade: 2000, hp: 302, engine: "V6" },
+  { name: "Lexus LS 500", make: "Lexus", country: "Japan", body: "Sedan", decade: 2010, hp: 416, engine: "V6T" },
+  { name: "Lexus GS F", make: "Lexus", country: "Japan", body: "Sedan", decade: 2010, hp: 467, engine: "V8" },
+  { name: "Lexus RX 350", make: "Lexus", country: "Japan", body: "SUV", decade: 1990, hp: 275, engine: "I4T" },
+  { name: "Lexus RX 500h", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 367, engine: "Hybrid" },
+  { name: "Lexus NX 350h", make: "Lexus", country: "Japan", body: "SUV", decade: 2010, hp: 239, engine: "Hybrid" },
+  { name: "Lexus GX 550", make: "Lexus", country: "Japan", body: "SUV", decade: 2000, hp: 349, engine: "V6T" },
+  { name: "Lexus LX 600", make: "Lexus", country: "Japan", body: "SUV", decade: 1990, hp: 409, engine: "V6T" },
+  { name: "Lexus TX 500h", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 366, engine: "Hybrid" },
+  { name: "Lexus RZ 450e", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 308, engine: "EV" },
+  { name: "Lexus UX 300e", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 201, engine: "EV" },
+  // Mazda
+  { name: "Mazda MX-5 Miata RF", make: "Mazda", country: "Japan", body: "Coupe", decade: 2010, hp: 181, engine: "I4" },
+  { name: "Mazda Mazda3", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 191, engine: "I4" },
+  { name: "Mazda Mazda3 Turbo", make: "Mazda", country: "Japan", body: "Hatchback", decade: 2020, hp: 250, engine: "I4T" },
+  { name: "Mazda Mazda6", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 250, engine: "I4T" },
+  { name: "Mazda CX-30", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 250, engine: "I4T" },
+  { name: "Mazda CX-70", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 340, engine: "Hybrid" },
+  { name: "Mazda MX-30", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 143, engine: "EV" },
+  // Mitsubishi
+  { name: "Mitsubishi Lancer Evolution X", make: "Mitsubishi", country: "Japan", body: "Sedan", decade: 2000, hp: 291, engine: "I4T" },
+  { name: "Mitsubishi Lancer Evolution IX", make: "Mitsubishi", country: "Japan", body: "Sedan", decade: 2000, hp: 286, engine: "I4T" },
+  { name: "Mitsubishi Eclipse Cross", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 2010, hp: 152, engine: "I4T" },
+  { name: "Mitsubishi Outlander PHEV", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 2010, hp: 248, engine: "Hybrid" },
+  { name: "Mitsubishi Mirage", make: "Mitsubishi", country: "Japan", body: "Hatchback", decade: 1970, hp: 78, engine: "I3" },
+  // Nissan
+  { name: "Nissan GT-R Nismo", make: "Nissan", country: "Japan", body: "Coupe", decade: 2010, hp: 600, engine: "V6T" },
+  { name: "Nissan Z Nismo", make: "Nissan", country: "Japan", body: "Coupe", decade: 2020, hp: 420, engine: "V6T" },
+  { name: "Nissan Skyline GT-R R32", make: "Nissan", country: "Japan", body: "Coupe", decade: 1980, hp: 276, engine: "I6T" },
+  { name: "Nissan Sentra", make: "Nissan", country: "Japan", body: "Sedan", decade: 1980, hp: 149, engine: "I4" },
+  { name: "Nissan Titan", make: "Nissan", country: "Japan", body: "Truck", decade: 2000, hp: 400, engine: "V8" },
+  { name: "Nissan Kicks", make: "Nissan", country: "Japan", body: "SUV", decade: 2010, hp: 122, engine: "I4" },
+  // Subaru
+  { name: "Subaru Ascent", make: "Subaru", country: "Japan", body: "SUV", decade: 2010, hp: 260, engine: "H4T" },
+  { name: "Subaru Solterra", make: "Subaru", country: "Japan", body: "SUV", decade: 2020, hp: 215, engine: "EV" },
+  // Suzuki
+  { name: "Suzuki Vitara", make: "Suzuki", country: "Japan", body: "SUV", decade: 1980, hp: 150, engine: "I4T" },
+  { name: "Suzuki Hayabusa", make: "Suzuki", country: "Japan", body: "Coupe", decade: 1990, hp: 197, engine: "I4" },
+  { name: "Suzuki Cappuccino", make: "Suzuki", country: "Japan", body: "Convertible", decade: 1990, hp: 63, engine: "I3T" },
+  // Toyota
+  { name: "Toyota GR Yaris", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2020, hp: 300, engine: "I3T" },
+  { name: "Toyota Corolla Hatchback", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2010, hp: 169, engine: "I4" },
+  { name: "Toyota RAV4 Prime", make: "Toyota", country: "Japan", body: "SUV", decade: 2020, hp: 302, engine: "Hybrid" },
+  { name: "Toyota Prius Prime", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2010, hp: 220, engine: "Hybrid" },
+  { name: "Toyota bZ4X", make: "Toyota", country: "Japan", body: "SUV", decade: 2020, hp: 214, engine: "EV" },
+  { name: "Toyota AE86 Corolla", make: "Toyota", country: "Japan", body: "Coupe", decade: 1980, hp: 128, engine: "I4" },
+  { name: "Toyota Century", make: "Toyota", country: "Japan", body: "Sedan", decade: 1960, hp: 400, engine: "Hybrid" },
+  // ── SOUTH KOREA (New) ──
+  // Genesis
+  { name: "Genesis G80 EV", make: "Genesis", country: "South Korea", body: "Sedan", decade: 2020, hp: 365, engine: "EV" },
+  { name: "Genesis GV70 EV", make: "Genesis", country: "South Korea", body: "SUV", decade: 2020, hp: 429, engine: "EV" },
+  { name: "Genesis GV80 Coupe", make: "Genesis", country: "South Korea", body: "SUV", decade: 2020, hp: 409, engine: "V6T" },
+  // Hyundai
+  { name: "Hyundai Kona Electric", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2010, hp: 201, engine: "EV" },
+  { name: "Hyundai Kona N", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 276, engine: "I4T" },
+  { name: "Hyundai Tucson Hybrid", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 226, engine: "Hybrid" },
+  { name: "Hyundai Sonata N Line", make: "Hyundai", country: "South Korea", body: "Sedan", decade: 2020, hp: 290, engine: "I4T" },
+  { name: "Hyundai Elantra", make: "Hyundai", country: "South Korea", body: "Sedan", decade: 1990, hp: 147, engine: "I4" },
+  { name: "Hyundai Santa Cruz", make: "Hyundai", country: "South Korea", body: "Truck", decade: 2020, hp: 281, engine: "I4T" },
+  // Kia
+  { name: "Kia EV6 GT", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 576, engine: "EV" },
+  { name: "Kia Stinger GT", make: "Kia", country: "South Korea", body: "Sedan", decade: 2010, hp: 368, engine: "V6T" },
+  { name: "Kia K5 GT", make: "Kia", country: "South Korea", body: "Sedan", decade: 2020, hp: 290, engine: "I4T" },
+  { name: "Kia Forte GT", make: "Kia", country: "South Korea", body: "Sedan", decade: 2010, hp: 201, engine: "I4T" },
+  { name: "Kia Sportage Hybrid", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 226, engine: "Hybrid" },
+  { name: "Kia Soul", make: "Kia", country: "South Korea", body: "Hatchback", decade: 2000, hp: 147, engine: "I4" },
+  { name: "Kia Seltos", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 195, engine: "I4T" },
+  { name: "Kia Carnival", make: "Kia", country: "South Korea", body: "Van", decade: 1990, hp: 290, engine: "V6" },
+  { name: "Kia Niro EV", make: "Kia", country: "South Korea", body: "SUV", decade: 2010, hp: 201, engine: "EV" },
+  // ── GERMANY (New) ──
+  // Audi
+  { name: "Audi RS e-tron GT", make: "Audi", country: "Germany", body: "Sedan", decade: 2020, hp: 637, engine: "EV" },
+  { name: "Audi R8 V10 Performance", make: "Audi", country: "Germany", body: "Coupe", decade: 2010, hp: 602, engine: "V10" },
+  { name: "Audi S3", make: "Audi", country: "Germany", body: "Sedan", decade: 2010, hp: 306, engine: "I4T" },
+  { name: "Audi S4", make: "Audi", country: "Germany", body: "Sedan", decade: 1990, hp: 349, engine: "V6T" },
+  { name: "Audi S5", make: "Audi", country: "Germany", body: "Coupe", decade: 2000, hp: 349, engine: "V6T" },
+  { name: "Audi A3", make: "Audi", country: "Germany", body: "Sedan", decade: 1990, hp: 201, engine: "I4T" },
+  { name: "Audi A5", make: "Audi", country: "Germany", body: "Coupe", decade: 2000, hp: 261, engine: "I4T" },
+  { name: "Audi A7", make: "Audi", country: "Germany", body: "Sedan", decade: 2010, hp: 335, engine: "V6T" },
+  { name: "Audi A8", make: "Audi", country: "Germany", body: "Sedan", decade: 1990, hp: 453, engine: "V8T" },
+  { name: "Audi Q3", make: "Audi", country: "Germany", body: "SUV", decade: 2010, hp: 228, engine: "I4T" },
+  { name: "Audi SQ5", make: "Audi", country: "Germany", body: "SUV", decade: 2010, hp: 349, engine: "V6T" },
+  { name: "Audi SQ7", make: "Audi", country: "Germany", body: "SUV", decade: 2010, hp: 500, engine: "V8T" },
+  { name: "Audi Q8", make: "Audi", country: "Germany", body: "SUV", decade: 2010, hp: 335, engine: "V6T" },
+  { name: "Audi RS Q8", make: "Audi", country: "Germany", body: "SUV", decade: 2020, hp: 591, engine: "V8T" },
+  { name: "Audi Q4 e-tron", make: "Audi", country: "Germany", body: "SUV", decade: 2020, hp: 295, engine: "EV" },
+  // BMW
+  { name: "BMW M4 CSL", make: "BMW", country: "Germany", body: "Coupe", decade: 2020, hp: 543, engine: "I6T" },
+  { name: "BMW M5 CS", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 627, engine: "V8T" },
+  { name: "BMW 4 Series", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 255, engine: "I4T" },
+  { name: "BMW X3 M", make: "BMW", country: "Germany", body: "SUV", decade: 2010, hp: 503, engine: "I6T" },
+  { name: "BMW X5 M", make: "BMW", country: "Germany", body: "SUV", decade: 2000, hp: 617, engine: "V8T" },
+  { name: "BMW X6 M", make: "BMW", country: "Germany", body: "SUV", decade: 2000, hp: 617, engine: "V8T" },
+  { name: "BMW i4 M50", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 536, engine: "EV" },
+  { name: "BMW i5 M60", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 593, engine: "EV" },
+  { name: "BMW i7 M70", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 650, engine: "EV" },
+  { name: "BMW iX M60", make: "BMW", country: "Germany", body: "SUV", decade: 2020, hp: 610, engine: "EV" },
+  { name: "BMW Z4 M40i", make: "BMW", country: "Germany", body: "Convertible", decade: 2000, hp: 382, engine: "I6T" },
+  { name: "BMW i8", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 369, engine: "Hybrid" },
+  { name: "BMW E30 M3", make: "BMW", country: "Germany", body: "Coupe", decade: 1980, hp: 215, engine: "I4" },
+  // Maybach
+  { name: "Maybach S 680", make: "Maybach", country: "Germany", body: "Sedan", decade: 2020, hp: 621, engine: "V12T" },
+  { name: "Maybach GLS 600", make: "Maybach", country: "Germany", body: "SUV", decade: 2020, hp: 550, engine: "V8T" },
+  { name: "Maybach EQS 680 SUV", make: "Maybach", country: "Germany", body: "SUV", decade: 2020, hp: 649, engine: "EV" },
+  { name: "Maybach SL 680 Monogram", make: "Maybach", country: "Germany", body: "Convertible", decade: 2020, hp: 577, engine: "V8T" },
+  // Mercedes-AMG
+  { name: "Mercedes-AMG AMG C63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 671, engine: "Hybrid" },
+  { name: "Mercedes-AMG AMG E63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2000, hp: 603, engine: "V8T" },
+  { name: "Mercedes-AMG AMG S63", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 791, engine: "Hybrid" },
+  { name: "Mercedes-AMG AMG GT", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2010, hp: 577, engine: "V8T" },
+  { name: "Mercedes-AMG AMG GT 63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 630, engine: "V8T" },
+  { name: "Mercedes-AMG AMG GT Black Series", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2020, hp: 720, engine: "V8T" },
+  { name: "Mercedes-AMG AMG G63", make: "Mercedes-AMG", country: "Germany", body: "SUV", decade: 2010, hp: 577, engine: "V8T" },
+  { name: "Mercedes-AMG AMG GLE 63 S", make: "Mercedes-AMG", country: "Germany", body: "SUV", decade: 2010, hp: 603, engine: "V8T" },
+  { name: "Mercedes-AMG AMG One", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2020, hp: 1049, engine: "Hybrid" },
+  { name: "Mercedes-AMG AMG SL 63", make: "Mercedes-AMG", country: "Germany", body: "Convertible", decade: 2020, hp: 577, engine: "V8T" },
+  { name: "Mercedes-AMG AMG A45 S", make: "Mercedes-AMG", country: "Germany", body: "Hatchback", decade: 2010, hp: 416, engine: "I4T" },
+  { name: "Mercedes-AMG AMG CLA 45 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 416, engine: "I4T" },
+  // Mercedes-Benz
+  { name: "Mercedes-Benz GLS", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2000, hp: 483, engine: "V8T" },
+  { name: "Mercedes-Benz G-Class G550", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 416, engine: "V8T" },
+  { name: "Mercedes-Benz CLA", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 221, engine: "I4T" },
+  { name: "Mercedes-Benz A-Class", make: "Mercedes-Benz", country: "Germany", body: "Hatchback", decade: 1990, hp: 221, engine: "I4T" },
+  { name: "Mercedes-Benz SL 55", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, engine: "V8T" },
+  { name: "Mercedes-Benz EQE", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 402, engine: "EV" },
+  { name: "Mercedes-Benz EQS SUV", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 536, engine: "EV" },
+  { name: "Mercedes-Benz EQB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 228, engine: "EV" },
+  // Mini
+  { name: "Mini Cooper S", make: "Mini", country: "Germany", body: "Hatchback", decade: 2000, hp: 189, engine: "I4T" },
+  { name: "Mini Cooper SE", make: "Mini", country: "Germany", body: "Hatchback", decade: 2020, hp: 184, engine: "EV" },
+  { name: "Mini Countryman JCW", make: "Mini", country: "Germany", body: "SUV", decade: 2010, hp: 301, engine: "I4T" },
+  { name: "Mini Clubman JCW", make: "Mini", country: "Germany", body: "Wagon", decade: 2010, hp: 301, engine: "I4T" },
+  { name: "Mini Countryman SE", make: "Mini", country: "Germany", body: "SUV", decade: 2020, hp: 312, engine: "EV" },
+  // Opel
+  { name: "Opel Corsa-e", make: "Opel", country: "Germany", body: "Hatchback", decade: 2020, hp: 136, engine: "EV" },
+  { name: "Opel Astra", make: "Opel", country: "Germany", body: "Hatchback", decade: 1990, hp: 225, engine: "Hybrid" },
+  { name: "Opel Mokka-e", make: "Opel", country: "Germany", body: "SUV", decade: 2020, hp: 136, engine: "EV" },
+  { name: "Opel Grandland", make: "Opel", country: "Germany", body: "SUV", decade: 2010, hp: 225, engine: "Hybrid" },
+  { name: "Opel Insignia GSi", make: "Opel", country: "Germany", body: "Sedan", decade: 2010, hp: 230, engine: "I4T" },
+  // Porsche
+  { name: "Porsche 911 Carrera", make: "Porsche", country: "Germany", body: "Coupe", decade: 1960, hp: 379, engine: "H6T" },
+  { name: "Porsche 911 Carrera S", make: "Porsche", country: "Germany", body: "Coupe", decade: 1990, hp: 443, engine: "H6T" },
+  { name: "Porsche 911 GT3 RS", make: "Porsche", country: "Germany", body: "Coupe", decade: 2000, hp: 518, engine: "H6" },
+  { name: "Porsche Cayman GT4", make: "Porsche", country: "Germany", body: "Coupe", decade: 2010, hp: 414, engine: "H6" },
+  { name: "Porsche Cayman GT4 RS", make: "Porsche", country: "Germany", body: "Coupe", decade: 2020, hp: 493, engine: "H6" },
+  { name: "Porsche 718 Boxster", make: "Porsche", country: "Germany", body: "Convertible", decade: 1990, hp: 300, engine: "H4T" },
+  { name: "Porsche Cayenne Turbo GT", make: "Porsche", country: "Germany", body: "SUV", decade: 2020, hp: 729, engine: "Hybrid" },
+  { name: "Porsche Macan Turbo EV", make: "Porsche", country: "Germany", body: "SUV", decade: 2020, hp: 630, engine: "EV" },
+  { name: "Porsche Panamera Turbo S", make: "Porsche", country: "Germany", body: "Sedan", decade: 2010, hp: 690, engine: "Hybrid" },
+  { name: "Porsche Taycan Turbo S", make: "Porsche", country: "Germany", body: "Sedan", decade: 2020, hp: 750, engine: "EV" },
+  { name: "Porsche Taycan Cross Turismo", make: "Porsche", country: "Germany", body: "Wagon", decade: 2020, hp: 590, engine: "EV" },
+  // Volkswagen
+  { name: "Volkswagen Jetta", make: "Volkswagen", country: "Germany", body: "Sedan", decade: 1970, hp: 158, engine: "I4T" },
+  { name: "Volkswagen Passat", make: "Volkswagen", country: "Germany", body: "Sedan", decade: 1970, hp: 174, engine: "I4T" },
+  { name: "Volkswagen ID. Buzz", make: "Volkswagen", country: "Germany", body: "Van", decade: 2020, hp: 282, engine: "EV" },
+  { name: "Volkswagen Taos", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2020, hp: 158, engine: "I4T" },
+  { name: "Volkswagen Arteon", make: "Volkswagen", country: "Germany", body: "Sedan", decade: 2010, hp: 300, engine: "I4T" },
+  { name: "Volkswagen Scirocco R", make: "Volkswagen", country: "Germany", body: "Coupe", decade: 2000, hp: 280, engine: "I4T" },
+  // ── ITALY (New) ──
+  // Alfa Romeo
+  { name: "Alfa Romeo Giulia", make: "Alfa Romeo", country: "Italy", body: "Sedan", decade: 2010, hp: 280, engine: "I4T" },
+  { name: "Alfa Romeo Stelvio", make: "Alfa Romeo", country: "Italy", body: "SUV", decade: 2010, hp: 280, engine: "I4T" },
+  { name: "Alfa Romeo Tonale", make: "Alfa Romeo", country: "Italy", body: "SUV", decade: 2020, hp: 272, engine: "Hybrid" },
+  { name: "Alfa Romeo 33 Stradale", make: "Alfa Romeo", country: "Italy", body: "Coupe", decade: 2020, hp: 750, engine: "EV" },
+  { name: "Alfa Romeo GTV", make: "Alfa Romeo", country: "Italy", body: "Coupe", decade: 1990, hp: 220, engine: "V6" },
+  { name: "Alfa Romeo 8C Competizione", make: "Alfa Romeo", country: "Italy", body: "Coupe", decade: 2000, hp: 450, engine: "V8" },
+  // De Tomaso
+  { name: "De Tomaso Mangusta", make: "De Tomaso", country: "Italy", body: "Coupe", decade: 1960, hp: 305, engine: "V8" },
+  { name: "De Tomaso P72", make: "De Tomaso", country: "Italy", body: "Coupe", decade: 2020, hp: 700, engine: "V8T" },
+  // Ferrari
+  { name: "Ferrari 296 GTS", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2020, hp: 819, engine: "Hybrid" },
+  { name: "Ferrari SF90 XX Stradale", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 1016, engine: "Hybrid" },
+  { name: "Ferrari Roma Spider", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2020, hp: 612, engine: "V8T" },
+  { name: "Ferrari 812 Competizione", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 830, engine: "V12" },
+  { name: "Ferrari F8 Tributo", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 710, engine: "V8T" },
+  { name: "Ferrari 488 Pista", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 710, engine: "V8T" },
+  { name: "Ferrari Daytona SP3", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 829, engine: "V12" },
+  { name: "Ferrari Monza SP1", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2010, hp: 799, engine: "V12" },
+  { name: "Ferrari California T", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2010, hp: 553, engine: "V8T" },
+  { name: "Ferrari Portofino M", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2020, hp: 620, engine: "V8T" },
+  // Fiat
+  { name: "Fiat 500 Abarth", make: "Fiat", country: "Italy", body: "Hatchback", decade: 2000, hp: 160, engine: "I4T" },
+  { name: "Fiat 500e", make: "Fiat", country: "Italy", body: "Hatchback", decade: 2020, hp: 118, engine: "EV" },
+  { name: "Fiat 500X", make: "Fiat", country: "Italy", body: "SUV", decade: 2010, hp: 177, engine: "I4T" },
+  { name: "Fiat 124 Spider Abarth", make: "Fiat", country: "Italy", body: "Convertible", decade: 2010, hp: 164, engine: "I4T" },
+  { name: "Fiat Panda", make: "Fiat", country: "Italy", body: "Hatchback", decade: 1980, hp: 70, engine: "I4" },
+  { name: "Fiat Tipo", make: "Fiat", country: "Italy", body: "Sedan", decade: 2010, hp: 150, engine: "I4T" },
+  // Lamborghini
+  { name: "Lamborghini Huracán Tecnica", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 631, engine: "V10" },
+  { name: "Lamborghini Huracán STO", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 631, engine: "V10" },
+  { name: "Lamborghini Huracán Performante", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2010, hp: 631, engine: "V10" },
+  { name: "Lamborghini Aventador SVJ", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2010, hp: 770, engine: "V12" },
+  { name: "Lamborghini Aventador Ultimae", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 780, engine: "V12" },
+  { name: "Lamborghini Urus Performante", make: "Lamborghini", country: "Italy", body: "SUV", decade: 2020, hp: 657, engine: "V8T" },
+  { name: "Lamborghini Urus SE", make: "Lamborghini", country: "Italy", body: "SUV", decade: 2020, hp: 789, engine: "Hybrid" },
+  { name: "Lamborghini Temerario", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 907, engine: "Hybrid" },
+  { name: "Lamborghini Countach LPI 800-4", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 803, engine: "Hybrid" },
+  { name: "Lamborghini Sián FKP 37", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 819, engine: "Hybrid" },
+  { name: "Lamborghini Murciélago", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2000, hp: 640, engine: "V12" },
+  // Maserati
+  { name: "Maserati MC20 Cielo", make: "Maserati", country: "Italy", body: "Convertible", decade: 2020, hp: 621, engine: "V6T" },
+  { name: "Maserati GranTurismo Folgore", make: "Maserati", country: "Italy", body: "Coupe", decade: 2020, hp: 750, engine: "EV" },
+  { name: "Maserati Ghibli Trofeo", make: "Maserati", country: "Italy", body: "Sedan", decade: 2020, hp: 580, engine: "V8T" },
+  { name: "Maserati Quattroporte", make: "Maserati", country: "Italy", body: "Sedan", decade: 1960, hp: 580, engine: "V8T" },
+  { name: "Maserati Levante", make: "Maserati", country: "Italy", body: "SUV", decade: 2010, hp: 345, engine: "V6T" },
+  { name: "Maserati Levante Trofeo", make: "Maserati", country: "Italy", body: "SUV", decade: 2020, hp: 580, engine: "V8T" },
+  { name: "Maserati Grecale", make: "Maserati", country: "Italy", body: "SUV", decade: 2020, hp: 523, engine: "V6T" },
+  { name: "Maserati Grecale Folgore", make: "Maserati", country: "Italy", body: "SUV", decade: 2020, hp: 550, engine: "EV" },
+  // Pagani
+  { name: "Pagani Huayra R", make: "Pagani", country: "Italy", body: "Coupe", decade: 2020, hp: 850, engine: "V12" },
+  { name: "Pagani Huayra Roadster BC", make: "Pagani", country: "Italy", body: "Convertible", decade: 2020, hp: 791, engine: "V12T" },
+  { name: "Pagani Utopia", make: "Pagani", country: "Italy", body: "Coupe", decade: 2020, hp: 852, engine: "V12T" },
+  { name: "Pagani Zonda R", make: "Pagani", country: "Italy", body: "Coupe", decade: 2000, hp: 740, engine: "V12" },
+  { name: "Pagani Zonda Cinque", make: "Pagani", country: "Italy", body: "Coupe", decade: 2000, hp: 669, engine: "V12" },
+  // ── UK (New) ──
+  // Aston Martin
+  { name: "Aston Martin DB12", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 671, engine: "V8T" },
+  { name: "Aston Martin DB12 Volante", make: "Aston Martin", country: "UK", body: "Convertible", decade: 2020, hp: 671, engine: "V8T" },
+  { name: "Aston Martin DBS 770 Ultimate", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 770, engine: "V12T" },
+  { name: "Aston Martin DBX707", make: "Aston Martin", country: "UK", body: "SUV", decade: 2020, hp: 707, engine: "V8T" },
+  { name: "Aston Martin Valhalla", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 998, engine: "Hybrid" },
+  { name: "Aston Martin Vanquish", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2000, hp: 824, engine: "V12T" },
+  { name: "Aston Martin One-77", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2000, hp: 750, engine: "V12" },
+  { name: "Aston Martin Vulcan", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2010, hp: 820, engine: "V12" },
+  // Bentley
+  { name: "Bentley Continental GT Speed", make: "Bentley", country: "UK", body: "Coupe", decade: 2010, hp: 771, engine: "Hybrid" },
+  { name: "Bentley Continental GTC", make: "Bentley", country: "UK", body: "Convertible", decade: 2000, hp: 542, engine: "V8T" },
+  { name: "Bentley Flying Spur Speed", make: "Bentley", country: "UK", body: "Sedan", decade: 2020, hp: 771, engine: "Hybrid" },
+  { name: "Bentley Bentayga S", make: "Bentley", country: "UK", body: "SUV", decade: 2020, hp: 542, engine: "V8T" },
+  { name: "Bentley Batur", make: "Bentley", country: "UK", body: "Coupe", decade: 2020, hp: 730, engine: "W12T" },
+  { name: "Bentley Mulliner Bacalar", make: "Bentley", country: "UK", body: "Convertible", decade: 2020, hp: 650, engine: "W12T" },
+  // Jaguar
+  { name: "Jaguar F-Type R", make: "Jaguar", country: "UK", body: "Coupe", decade: 2010, hp: 575, engine: "V8T" },
+  { name: "Jaguar F-Type Convertible", make: "Jaguar", country: "UK", body: "Convertible", decade: 2010, hp: 380, engine: "V8T" },
+  { name: "Jaguar XE SV Project 8", make: "Jaguar", country: "UK", body: "Sedan", decade: 2010, hp: 592, engine: "V8T" },
+  { name: "Jaguar XF", make: "Jaguar", country: "UK", body: "Sedan", decade: 2000, hp: 296, engine: "I4T" },
+  { name: "Jaguar XJ", make: "Jaguar", country: "UK", body: "Sedan", decade: 1960, hp: 470, engine: "V8T" },
+  { name: "Jaguar F-Pace SVR", make: "Jaguar", country: "UK", body: "SUV", decade: 2010, hp: 550, engine: "V8T" },
+  { name: "Jaguar F-Pace", make: "Jaguar", country: "UK", body: "SUV", decade: 2010, hp: 296, engine: "I4T" },
+  { name: "Jaguar E-Pace", make: "Jaguar", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" },
+  { name: "Jaguar C-X75", make: "Jaguar", country: "UK", body: "Coupe", decade: 2010, hp: 850, engine: "Hybrid" },
+  // Land Rover
+  { name: "Land Rover Range Rover", make: "Land Rover", country: "UK", body: "SUV", decade: 1970, hp: 523, engine: "V8T" },
+  { name: "Land Rover Range Rover Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2000, hp: 523, engine: "V8T" },
+  { name: "Land Rover Range Rover Sport SV", make: "Land Rover", country: "UK", body: "SUV", decade: 2020, hp: 626, engine: "V8T" },
+  { name: "Land Rover Range Rover Velar", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 395, engine: "I6T" },
+  { name: "Land Rover Range Rover Evoque", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" },
+  { name: "Land Rover Defender V8", make: "Land Rover", country: "UK", body: "SUV", decade: 2020, hp: 518, engine: "V8T" },
+  { name: "Land Rover Discovery Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" },
+  // Lotus
+  { name: "Lotus Eletre", make: "Lotus", country: "UK", body: "SUV", decade: 2020, hp: 905, engine: "EV" },
+  { name: "Lotus Emeya", make: "Lotus", country: "UK", body: "Sedan", decade: 2020, hp: 905, engine: "EV" },
+  { name: "Lotus Esprit V8", make: "Lotus", country: "UK", body: "Coupe", decade: 1990, hp: 500, engine: "V8T" },
+  { name: "Lotus Evora GT", make: "Lotus", country: "UK", body: "Coupe", decade: 2010, hp: 416, engine: "V6T" },
+  // McLaren
+  { name: "McLaren 750S", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 740, engine: "V8T" },
+  { name: "McLaren 750S Spider", make: "McLaren", country: "UK", body: "Convertible", decade: 2020, hp: 740, engine: "V8T" },
+  { name: "McLaren 765LT", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 755, engine: "V8T" },
+  { name: "McLaren Artura Spider", make: "McLaren", country: "UK", body: "Convertible", decade: 2020, hp: 700, engine: "Hybrid" },
+  { name: "McLaren Senna", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 789, engine: "V8T" },
+  { name: "McLaren Speedtail", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 1035, engine: "Hybrid" },
+  { name: "McLaren Elva", make: "McLaren", country: "UK", body: "Convertible", decade: 2020, hp: 804, engine: "V8T" },
+  { name: "McLaren GT", make: "McLaren", country: "UK", body: "Coupe", decade: 2010, hp: 612, engine: "V8T" },
+  { name: "McLaren W1", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 1258, engine: "Hybrid" },
+  // Rolls-Royce
+  { name: "Rolls-Royce Ghost Black Badge", make: "Rolls-Royce", country: "UK", body: "Sedan", decade: 2020, hp: 592, engine: "V12T" },
+  { name: "Rolls-Royce Wraith", make: "Rolls-Royce", country: "UK", body: "Coupe", decade: 2010, hp: 624, engine: "V12T" },
+  { name: "Rolls-Royce Dawn", make: "Rolls-Royce", country: "UK", body: "Convertible", decade: 2010, hp: 563, engine: "V12T" },
+  { name: "Rolls-Royce Cullinan Black Badge", make: "Rolls-Royce", country: "UK", body: "SUV", decade: 2020, hp: 592, engine: "V12T" },
+  // ── SWEDEN (New) ──
+  // Koenigsegg
+  { name: "Koenigsegg Jesko Absolut", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2020, hp: 1600, engine: "V8T" },
+  { name: "Koenigsegg Regera", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2010, hp: 1500, engine: "Hybrid" },
+  { name: "Koenigsegg CC850", make: "Koenigsegg", country: "Sweden", body: "Convertible", decade: 2020, hp: 1385, engine: "V8T" },
+  { name: "Koenigsegg One:1", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2010, hp: 1341, engine: "V8T" },
+  { name: "Koenigsegg CCX", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2000, hp: 806, engine: "V8T" },
+  // Polestar
+  { name: "Polestar Polestar 1", make: "Polestar", country: "Sweden", body: "Coupe", decade: 2010, hp: 619, engine: "Hybrid" },
+  { name: "Polestar Polestar 2", make: "Polestar", country: "Sweden", body: "Sedan", decade: 2020, hp: 476, engine: "EV" },
+  { name: "Polestar Polestar 3", make: "Polestar", country: "Sweden", body: "SUV", decade: 2020, hp: 510, engine: "EV" },
+  { name: "Polestar Polestar 4", make: "Polestar", country: "Sweden", body: "SUV", decade: 2020, hp: 544, engine: "EV" },
+  { name: "Polestar Polestar 5", make: "Polestar", country: "Sweden", body: "Sedan", decade: 2020, hp: 884, engine: "EV" },
+  { name: "Polestar Polestar 6", make: "Polestar", country: "Sweden", body: "Convertible", decade: 2020, hp: 884, engine: "EV" },
+  // Volvo
+  { name: "Volvo XC40", make: "Volvo", country: "Sweden", body: "SUV", decade: 2010, hp: 248, engine: "I4T" },
+  { name: "Volvo S90", make: "Volvo", country: "Sweden", body: "Sedan", decade: 2010, hp: 455, engine: "Hybrid" },
+  { name: "Volvo V60 Cross Country", make: "Volvo", country: "Sweden", body: "Wagon", decade: 2010, hp: 247, engine: "I4T" },
+  { name: "Volvo C40 Recharge", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 402, engine: "EV" },
+  { name: "Volvo EX90", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 496, engine: "EV" },
+  { name: "Volvo P1800", make: "Volvo", country: "Sweden", body: "Coupe", decade: 1960, hp: 115, engine: "I4" },
+  { name: "Volvo 240 Turbo", make: "Volvo", country: "Sweden", body: "Wagon", decade: 1970, hp: 160, engine: "I4T" },
+  // ── FRANCE (New) ──
+  // Bugatti
+  { name: "Bugatti Chiron Super Sport", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1578, engine: "W16T" },
+  { name: "Bugatti Chiron Super Sport 300+", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1578, engine: "W16T" },
+  { name: "Bugatti Chiron Pur Sport", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1479, engine: "W16T" },
+  { name: "Bugatti Divo", make: "Bugatti", country: "France", body: "Coupe", decade: 2010, hp: 1479, engine: "W16T" },
+  { name: "Bugatti Centodieci", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1577, engine: "W16T" },
+  { name: "Bugatti Mistral", make: "Bugatti", country: "France", body: "Convertible", decade: 2020, hp: 1578, engine: "W16T" },
+  { name: "Bugatti Bolide", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1824, engine: "W16T" },
+  { name: "Bugatti Veyron Super Sport", make: "Bugatti", country: "France", body: "Coupe", decade: 2010, hp: 1184, engine: "W16T" },
+  { name: "Bugatti EB110", make: "Bugatti", country: "France", body: "Coupe", decade: 1990, hp: 553, engine: "V12T" },
+  // Citroën
+  { name: "Citroën C5 X", make: "Citroën", country: "France", body: "Sedan", decade: 2020, hp: 225, engine: "Hybrid" },
+  { name: "Citroën C4", make: "Citroën", country: "France", body: "Hatchback", decade: 2000, hp: 155, engine: "I4T" },
+  { name: "Citroën ë-C4", make: "Citroën", country: "France", body: "Hatchback", decade: 2020, hp: 136, engine: "EV" },
+  { name: "Citroën C5 Aircross", make: "Citroën", country: "France", body: "SUV", decade: 2010, hp: 225, engine: "Hybrid" },
+  { name: "Citroën C3", make: "Citroën", country: "France", body: "Hatchback", decade: 2000, hp: 110, engine: "I4T" },
+  { name: "Citroën Berlingo", make: "Citroën", country: "France", body: "Van", decade: 1990, hp: 130, engine: "I4T" },
+  // Peugeot
+  { name: "Peugeot 208 GTi", make: "Peugeot", country: "France", body: "Hatchback", decade: 2010, hp: 208, engine: "I4T" },
+  { name: "Peugeot 308 GT", make: "Peugeot", country: "France", body: "Hatchback", decade: 2010, hp: 225, engine: "Hybrid" },
+  { name: "Peugeot 408", make: "Peugeot", country: "France", body: "SUV", decade: 2020, hp: 225, engine: "Hybrid" },
+  { name: "Peugeot 508 PSE", make: "Peugeot", country: "France", body: "Sedan", decade: 2020, hp: 355, engine: "Hybrid" },
+  { name: "Peugeot 3008", make: "Peugeot", country: "France", body: "SUV", decade: 2010, hp: 225, engine: "Hybrid" },
+  { name: "Peugeot 5008", make: "Peugeot", country: "France", body: "SUV", decade: 2000, hp: 225, engine: "Hybrid" },
+  { name: "Peugeot e-208", make: "Peugeot", country: "France", body: "Hatchback", decade: 2020, hp: 156, engine: "EV" },
+  { name: "Peugeot e-2008", make: "Peugeot", country: "France", body: "SUV", decade: 2020, hp: 156, engine: "EV" },
+  // Renault
+  { name: "Renault Mégane E-Tech", make: "Renault", country: "France", body: "Hatchback", decade: 2020, hp: 215, engine: "EV" },
+  { name: "Renault Clio", make: "Renault", country: "France", body: "Hatchback", decade: 1990, hp: 130, engine: "I4T" },
+  { name: "Renault Captur", make: "Renault", country: "France", body: "SUV", decade: 2010, hp: 155, engine: "I4T" },
+  { name: "Renault Arkana", make: "Renault", country: "France", body: "SUV", decade: 2020, hp: 200, engine: "Hybrid" },
+  { name: "Renault Austral", make: "Renault", country: "France", body: "SUV", decade: 2020, hp: 200, engine: "Hybrid" },
+  { name: "Renault 5 E-Tech", make: "Renault", country: "France", body: "Hatchback", decade: 2020, hp: 148, engine: "EV" },
+  { name: "Renault Zoe", make: "Renault", country: "France", body: "Hatchback", decade: 2010, hp: 135, engine: "EV" },
+  { name: "Renault Scenic E-Tech", make: "Renault", country: "France", body: "SUV", decade: 2020, hp: 218, engine: "EV" },
+  // ── CZECH REPUBLIC (New) ──
+  // Škoda
+  { name: "Škoda Octavia RS", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 245, engine: "I4T" },
+  { name: "Škoda Octavia", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 1990, hp: 150, engine: "I4T" },
+  { name: "Škoda Superb", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 280, engine: "I4T" },
+  { name: "Škoda Kodiaq RS", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 245, engine: "I4T" },
+  { name: "Škoda Kodiaq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" },
+  { name: "Škoda Kamiq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 150, engine: "I4T" },
+  { name: "Škoda Karoq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" },
+  { name: "Škoda Enyaq iV", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" },
+  { name: "Škoda Enyaq Coupe RS", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" },
+  { name: "Škoda Fabia RS", make: "Škoda", country: "Czech Republic", body: "Hatchback", decade: 2000, hp: 180, engine: "I4T" },
+  // ── ROMANIA (New) ──
+  // Dacia
+  { name: "Dacia Duster", make: "Dacia", country: "Romania", body: "SUV", decade: 2010, hp: 150, engine: "I4T" },
+  { name: "Dacia Sandero", make: "Dacia", country: "Romania", body: "Hatchback", decade: 2000, hp: 110, engine: "I4T" },
+  { name: "Dacia Sandero Stepway", make: "Dacia", country: "Romania", body: "Hatchback", decade: 2010, hp: 110, engine: "I4T" },
+  { name: "Dacia Jogger", make: "Dacia", country: "Romania", body: "Van", decade: 2020, hp: 140, engine: "Hybrid" },
+  { name: "Dacia Spring", make: "Dacia", country: "Romania", body: "Hatchback", decade: 2020, hp: 65, engine: "EV" },
+  { name: "Dacia Logan", make: "Dacia", country: "Romania", body: "Sedan", decade: 2000, hp: 110, engine: "I4T" },
+  // ── AUSTRIA (New) ──
+  // KTM
+  { name: "KTM X-Bow GT-XR", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 500, engine: "I5T" },
+  { name: "KTM X-Bow R", make: "KTM", country: "Austria", body: "Coupe", decade: 2000, hp: 300, engine: "I4T" },
+  { name: "KTM X-Bow GT2", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 600, engine: "I5T" },
+  { name: "KTM X-Bow GT4", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 370, engine: "I5T" },
+  // ── CROATIA (New) ──
+  // Rimac
+  { name: "Rimac Nevera", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2020, hp: 1914, engine: "EV" },
+  { name: "Rimac Nevera Time Attack", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2020, hp: 1914, engine: "EV" },
+  { name: "Rimac Concept_One", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2010, hp: 1224, engine: "EV" },
+  { name: "Rimac Concept_Two", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2010, hp: 1914, engine: "EV" },
+  // ── JAPAN (New additions) ──
+  { name: "Honda Accord Hybrid", make: "Honda", country: "Japan", body: "Sedan", decade: 2010, hp: 204, engine: "Hybrid" },
+  { name: "Honda Civic Hybrid", make: "Honda", country: "Japan", body: "Sedan", decade: 2020, hp: 200, engine: "Hybrid" },
+  { name: "Honda e", make: "Honda", country: "Japan", body: "Hatchback", decade: 2020, hp: 152, engine: "EV" },
+  { name: "Honda ZR-V", make: "Honda", country: "Japan", body: "SUV", decade: 2020, hp: 188, engine: "Hybrid" },
+  { name: "Lexus NX 350", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 275, engine: "I4T" },
+  { name: "Lexus NX 450h+", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 302, engine: "Hybrid" },
+  { name: "Lexus RC 350", make: "Lexus", country: "Japan", body: "Coupe", decade: 2010, hp: 311, engine: "V6" },
+  { name: "Lexus TX 350", make: "Lexus", country: "Japan", body: "SUV", decade: 2020, hp: 275, engine: "I4T" },
+  { name: "Lexus UX 250h", make: "Lexus", country: "Japan", body: "SUV", decade: 2010, hp: 181, engine: "Hybrid" },
+  { name: "Mazda CX-60", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 327, engine: "I6" },
+  { name: "Mazda CX-80", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 327, engine: "I6" },
+  { name: "Mitsubishi Outlander Sport", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 2010, hp: 148, engine: "I4" },
+  { name: "Mitsubishi Pajero", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 1980, hp: 187, engine: "V6" },
+  { name: "Nissan Juke", make: "Nissan", country: "Japan", body: "SUV", decade: 2010, hp: 143, engine: "I4T" },
+  { name: "Nissan Murano", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 260, engine: "V6" },
+  { name: "Nissan Qashqai", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 188, engine: "I4T" },
+  { name: "Nissan Skyline GT-R R33", make: "Nissan", country: "Japan", body: "Coupe", decade: 1990, hp: 276, engine: "I6T" },
+  { name: "Nissan X-Trail", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 201, engine: "I4T" },
+  { name: "Suzuki S-Cross", make: "Suzuki", country: "Japan", body: "SUV", decade: 2010, hp: 129, engine: "I4T" },
+  { name: "Toyota C-HR", make: "Toyota", country: "Japan", body: "SUV", decade: 2010, hp: 194, engine: "Hybrid" },
+  { name: "Toyota Corolla Cross", make: "Toyota", country: "Japan", body: "SUV", decade: 2020, hp: 169, engine: "I4" },
+  { name: "Toyota Grand Highlander", make: "Toyota", country: "Japan", body: "SUV", decade: 2020, hp: 265, engine: "I4T" },
+  { name: "Toyota Hilux", make: "Toyota", country: "Japan", body: "Truck", decade: 1960, hp: 201, engine: "I4D" },
+  { name: "Toyota Venza", make: "Toyota", country: "Japan", body: "SUV", decade: 2000, hp: 219, engine: "Hybrid" },
+  // ── SOUTH KOREA (New additions) ──
+  { name: "Genesis G70 Shooting Brake", make: "Genesis", country: "South Korea", body: "Wagon", decade: 2020, hp: 247, engine: "I4T" },
+  { name: "Hyundai i20 N", make: "Hyundai", country: "South Korea", body: "Hatchback", decade: 2020, hp: 201, engine: "I4T" },
+  { name: "Hyundai i30 N", make: "Hyundai", country: "South Korea", body: "Hatchback", decade: 2010, hp: 276, engine: "I4T" },
+  { name: "Hyundai Ioniq 9", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 381, engine: "EV" },
+  { name: "Hyundai Venue", make: "Hyundai", country: "South Korea", body: "SUV", decade: 2020, hp: 121, engine: "I4" },
+  { name: "Kia EV3", make: "Kia", country: "South Korea", body: "SUV", decade: 2020, hp: 201, engine: "EV" },
+  { name: "Kia Niro", make: "Kia", country: "South Korea", body: "SUV", decade: 2010, hp: 139, engine: "Hybrid" },
+  { name: "Kia Rio", make: "Kia", country: "South Korea", body: "Sedan", decade: 2000, hp: 120, engine: "I4" },
+  // ── USA (New additions) ──
+  { name: "AMC AMX", make: "AMC", country: "USA", body: "Coupe", decade: 1960, hp: 315, engine: "V8" },
+  { name: "AMC Gremlin", make: "AMC", country: "USA", body: "Hatchback", decade: 1970, hp: 128, engine: "I6" },
+  { name: "Buick GSX", make: "Buick", country: "USA", body: "Coupe", decade: 1970, hp: 360, engine: "V8" },
+  { name: "Cadillac Escalade IQ", make: "Cadillac", country: "USA", body: "SUV", decade: 2020, hp: 750, engine: "EV" },
+  { name: "Cadillac Optiq", make: "Cadillac", country: "USA", body: "SUV", decade: 2020, hp: 300, engine: "EV" },
+  { name: "Dodge Charger Daytona Scat Pack", make: "Dodge", country: "USA", body: "Coupe", decade: 2020, hp: 670, engine: "EV" },
+  { name: "Ford Mustang Dark Horse", make: "Ford", country: "USA", body: "Coupe", decade: 2020, hp: 500, engine: "V8" },
+  { name: "Ford Mustang Mach-E GT", make: "Ford", country: "USA", body: "SUV", decade: 2020, hp: 480, engine: "EV" },
+  { name: "Jeep Avenger", make: "Jeep", country: "USA", body: "SUV", decade: 2020, hp: 154, engine: "EV" },
+  { name: "Jeep Wrangler 4xe", make: "Jeep", country: "USA", body: "SUV", decade: 2020, hp: 375, engine: "Hybrid" },
+  { name: "Oldsmobile Cutlass", make: "Oldsmobile", country: "USA", body: "Coupe", decade: 1960, hp: 310, engine: "V8" },
+  { name: "Plymouth Road Runner", make: "Plymouth", country: "USA", body: "Coupe", decade: 1960, hp: 335, engine: "V8" },
+  { name: "Plymouth Superbird", make: "Plymouth", country: "USA", body: "Coupe", decade: 1970, hp: 390, engine: "V8" },
+  { name: "Pontiac Firebird", make: "Pontiac", country: "USA", body: "Coupe", decade: 1960, hp: 325, engine: "V8" },
+  { name: "Rivian R3X", make: "Rivian", country: "USA", body: "Hatchback", decade: 2020, hp: 500, engine: "EV" },
+  // ── GERMANY (New additions) ──
+  { name: "Audi A1", make: "Audi", country: "Germany", body: "Hatchback", decade: 2010, hp: 150, engine: "I4T" },
+  { name: "Audi Q2", make: "Audi", country: "Germany", body: "SUV", decade: 2010, hp: 190, engine: "I4T" },
+  { name: "Audi RS Q3", make: "Audi", country: "Germany", body: "SUV", decade: 2020, hp: 394, engine: "I5T" },
+  { name: "Audi RS4 Avant", make: "Audi", country: "Germany", body: "Wagon", decade: 2010, hp: 444, engine: "V6T" },
+  { name: "Audi S6", make: "Audi", country: "Germany", body: "Sedan", decade: 2010, hp: 444, engine: "V6T" },
+  { name: "Audi S7", make: "Audi", country: "Germany", body: "Sedan", decade: 2020, hp: 444, engine: "V6T" },
+  { name: "Audi S8", make: "Audi", country: "Germany", body: "Sedan", decade: 2020, hp: 563, engine: "V8T" },
+  { name: "Audi TT", make: "Audi", country: "Germany", body: "Coupe", decade: 1990, hp: 228, engine: "I4T" },
+  { name: "Audi TTS", make: "Audi", country: "Germany", body: "Coupe", decade: 2000, hp: 306, engine: "I4T" },
+  { name: "BMW 1 Series", make: "BMW", country: "Germany", body: "Hatchback", decade: 2000, hp: 178, engine: "I4T" },
+  { name: "BMW 2 Series", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 255, engine: "I4T" },
+  { name: "BMW 8 Series", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 335, engine: "I6T" },
+  { name: "BMW M240i", make: "BMW", country: "Germany", body: "Coupe", decade: 2020, hp: 382, engine: "I6T" },
+  { name: "BMW M340i", make: "BMW", country: "Germany", body: "Sedan", decade: 2020, hp: 382, engine: "I6T" },
+  { name: "BMW M440i", make: "BMW", country: "Germany", body: "Coupe", decade: 2020, hp: 382, engine: "I6T" },
+  { name: "BMW M550i", make: "BMW", country: "Germany", body: "Sedan", decade: 2010, hp: 523, engine: "V8T" },
+  { name: "BMW M850i", make: "BMW", country: "Germany", body: "Coupe", decade: 2010, hp: 523, engine: "V8T" },
+  { name: "BMW X1", make: "BMW", country: "Germany", body: "SUV", decade: 2000, hp: 241, engine: "I4T" },
+  { name: "BMW X2", make: "BMW", country: "Germany", body: "SUV", decade: 2010, hp: 241, engine: "I4T" },
+  { name: "BMW X4", make: "BMW", country: "Germany", body: "SUV", decade: 2010, hp: 248, engine: "I4T" },
+  { name: "BMW X4 M", make: "BMW", country: "Germany", body: "SUV", decade: 2020, hp: 503, engine: "I6T" },
+  { name: "BMW X6", make: "BMW", country: "Germany", body: "SUV", decade: 2000, hp: 335, engine: "I6T" },
+  { name: "Mercedes-AMG AMG GT 63 S E Performance", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2020, hp: 831, engine: "V8T" },
+  { name: "Mercedes-Benz GLA", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 221, engine: "I4T" },
+  { name: "Mercedes-Benz GLB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 221, engine: "I4T" },
+  { name: "Porsche 911 Dakar", make: "Porsche", country: "Germany", body: "Coupe", decade: 2020, hp: 473, engine: "F6T" },
+  { name: "Porsche 911 S/T", make: "Porsche", country: "Germany", body: "Coupe", decade: 2020, hp: 518, engine: "F6" },
+  { name: "Porsche 911 Sport Classic", make: "Porsche", country: "Germany", body: "Coupe", decade: 2020, hp: 543, engine: "F6T" },
+  { name: "Porsche Cayenne Coupe", make: "Porsche", country: "Germany", body: "SUV", decade: 2020, hp: 335, engine: "V6T" },
+  { name: "Porsche Cayenne E-Hybrid", make: "Porsche", country: "Germany", body: "SUV", decade: 2010, hp: 455, engine: "V6T" },
+  { name: "Porsche Panamera Turbo E-Hybrid", make: "Porsche", country: "Germany", body: "Sedan", decade: 2020, hp: 670, engine: "V8T" },
+  { name: "Volkswagen Golf", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 1970, hp: 147, engine: "I4T" },
+  { name: "Volkswagen Golf GTE", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 2010, hp: 245, engine: "I4T" },
+  { name: "Volkswagen ID.3", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 2020, hp: 201, engine: "EV" },
+  { name: "Volkswagen ID.5", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2020, hp: 299, engine: "EV" },
+  { name: "Volkswagen ID.7", make: "Volkswagen", country: "Germany", body: "Sedan", decade: 2020, hp: 282, engine: "EV" },
+  { name: "Volkswagen Polo GTI", make: "Volkswagen", country: "Germany", body: "Hatchback", decade: 1990, hp: 204, engine: "I4T" },
+  { name: "Volkswagen T-Roc R", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2020, hp: 296, engine: "I4T" },
+  { name: "Volkswagen Touareg", make: "Volkswagen", country: "Germany", body: "SUV", decade: 2000, hp: 340, engine: "V6T" },
+  // ── ITALY (New additions) ──
+  { name: "Alfa Romeo Giulia GTA", make: "Alfa Romeo", country: "Italy", body: "Sedan", decade: 2020, hp: 533, engine: "V6T" },
+  { name: "Alfa Romeo Junior", make: "Alfa Romeo", country: "Italy", body: "SUV", decade: 2020, hp: 156, engine: "EV" },
+  { name: "Alfa Romeo Spider", make: "Alfa Romeo", country: "Italy", body: "Convertible", decade: 1960, hp: 132, engine: "I4" },
+  { name: "Dallara Stradale", make: "Dallara", country: "Italy", body: "Coupe", decade: 2010, hp: 395, engine: "I4T" },
+  { name: "Ferrari 12Cilindri", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2020, hp: 819, engine: "V12" },
+  { name: "Ferrari 12Cilindri Spider", make: "Ferrari", country: "Italy", body: "Convertible", decade: 2020, hp: 819, engine: "V12" },
+  { name: "Ferrari 348", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1980, hp: 300, engine: "V8" },
+  { name: "Ferrari 360 Modena", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1990, hp: 394, engine: "V8" },
+  { name: "Ferrari 430 Scuderia", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2000, hp: 503, engine: "V8" },
+  { name: "Ferrari 550 Maranello", make: "Ferrari", country: "Italy", body: "Coupe", decade: 1990, hp: 478, engine: "V12" },
+  { name: "Ferrari 599 GTO", make: "Ferrari", country: "Italy", body: "Coupe", decade: 2010, hp: 661, engine: "V12" },
+  { name: "Fiat Abarth 595", make: "Fiat", country: "Italy", body: "Hatchback", decade: 2010, hp: 165, engine: "I4T" },
+  { name: "Fiat Abarth 695", make: "Fiat", country: "Italy", body: "Hatchback", decade: 2010, hp: 180, engine: "I4T" },
+  { name: "Lamborghini Huracán Sterrato", make: "Lamborghini", country: "Italy", body: "Coupe", decade: 2020, hp: 601, engine: "V10" },
+  { name: "Lamborghini LM002", make: "Lamborghini", country: "Italy", body: "SUV", decade: 1980, hp: 444, engine: "V12" },
+  { name: "Lancia Ypsilon", make: "Lancia", country: "Italy", body: "Hatchback", decade: 2020, hp: 156, engine: "EV" },
+  { name: "Maserati MC12", make: "Maserati", country: "Italy", body: "Coupe", decade: 2000, hp: 621, engine: "V12" },
+  // ── UK (New additions) ──
+  { name: "Ariel Nomad", make: "Ariel", country: "UK", body: "SUV", decade: 2010, hp: 235, engine: "I4T" },
+  { name: "Aston Martin V12 Vantage", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 690, engine: "V12T" },
+  { name: "BAC Mono", make: "BAC", country: "UK", body: "Coupe", decade: 2010, hp: 305, engine: "I4T" },
+  { name: "BAC Mono R", make: "BAC", country: "UK", body: "Coupe", decade: 2010, hp: 340, engine: "I4T" },
+  { name: "Ginetta G40", make: "Ginetta", country: "UK", body: "Coupe", decade: 2010, hp: 200, engine: "I4" },
+  { name: "Ginetta G55", make: "Ginetta", country: "UK", body: "Coupe", decade: 2010, hp: 380, engine: "V6" },
+  { name: "Lotus Exige S", make: "Lotus", country: "UK", body: "Coupe", decade: 2010, hp: 345, engine: "V6S" },
+  { name: "McLaren GTS", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 626, engine: "V8T" },
+  { name: "McLaren Solus GT", make: "McLaren", country: "UK", body: "Coupe", decade: 2020, hp: 829, engine: "V10" },
+  { name: "Morgan Plus Four", make: "Morgan", country: "UK", body: "Convertible", decade: 2020, hp: 255, engine: "I4T" },
+  { name: "Morgan Super 3", make: "Morgan", country: "UK", body: "Convertible", decade: 2020, hp: 118, engine: "I3" },
+  { name: "Radical SR10", make: "Radical", country: "UK", body: "Coupe", decade: 2020, hp: 425, engine: "V6" },
+  { name: "Radical SR3 XX", make: "Radical", country: "UK", body: "Coupe", decade: 2020, hp: 230, engine: "I4" },
+  { name: "Rolls-Royce Black Badge Ghost", make: "Rolls-Royce", country: "UK", body: "Sedan", decade: 2020, hp: 592, engine: "V12T" },
+  { name: "TVR Sagaris", make: "TVR", country: "UK", body: "Coupe", decade: 2000, hp: 406, engine: "I6" },
+  { name: "TVR Tuscan", make: "TVR", country: "UK", body: "Coupe", decade: 1990, hp: 350, engine: "I6" },
+  // ── FRANCE (New additions) ──
+  { name: "Alpine A110 R", make: "Alpine", country: "France", body: "Coupe", decade: 2020, hp: 300, engine: "I4T" },
+  { name: "Alpine A110 S", make: "Alpine", country: "France", body: "Coupe", decade: 2020, hp: 292, engine: "I4T" },
+  { name: "Alpine A290", make: "Alpine", country: "France", body: "Hatchback", decade: 2020, hp: 218, engine: "EV" },
+  { name: "Bugatti La Voiture Noire", make: "Bugatti", country: "France", body: "Coupe", decade: 2010, hp: 1500, engine: "W16T" },
+  { name: "DS 3 Crossback", make: "DS", country: "France", body: "SUV", decade: 2010, hp: 155, engine: "I4T" },
+  { name: "DS 4", make: "DS", country: "France", body: "SUV", decade: 2020, hp: 225, engine: "I4T" },
+  { name: "DS 7 Crossback", make: "DS", country: "France", body: "SUV", decade: 2010, hp: 300, engine: "I4T" },
+  { name: "DS 9", make: "DS", country: "France", body: "Sedan", decade: 2020, hp: 360, engine: "I4T" },
+  // ── SWEDEN (New additions) ──
+  { name: "Koenigsegg Agera R", make: "Koenigsegg", country: "Sweden", body: "Coupe", decade: 2010, hp: 1115, engine: "V8T" },
+  { name: "Saab 9-5", make: "Saab", country: "Sweden", body: "Sedan", decade: 1990, hp: 250, engine: "I4T" },
+  { name: "Saab 900 Turbo", make: "Saab", country: "Sweden", body: "Coupe", decade: 1970, hp: 145, engine: "I4T" },
+  { name: "Volvo XC60 Recharge", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 455, engine: "Hybrid" },
+  { name: "Volvo XC90 Recharge", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 455, engine: "Hybrid" },
+  // ── CZECH REPUBLIC (New additions) ──
+  { name: "Škoda Elroq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 282, engine: "EV" },
+  { name: "Škoda Scala", make: "Škoda", country: "Czech Republic", body: "Hatchback", decade: 2010, hp: 150, engine: "I4T" },
+  // ── ROMANIA (New additions) ──
+  { name: "Dacia Bigster", make: "Dacia", country: "Romania", body: "SUV", decade: 2020, hp: 155, engine: "Hybrid" },
+  // ── SPAIN (New) ──
+  { name: "CUPRA Born", make: "CUPRA", country: "Spain", body: "Hatchback", decade: 2020, hp: 228, engine: "EV" },
+  { name: "CUPRA Formentor", make: "CUPRA", country: "Spain", body: "SUV", decade: 2020, hp: 306, engine: "I4T" },
+  { name: "CUPRA Leon", make: "CUPRA", country: "Spain", body: "Hatchback", decade: 2020, hp: 296, engine: "I4T" },
+  { name: "CUPRA Tavascan", make: "CUPRA", country: "Spain", body: "SUV", decade: 2020, hp: 335, engine: "EV" },
+  { name: "SEAT Ibiza", make: "SEAT", country: "Spain", body: "Hatchback", decade: 1980, hp: 110, engine: "I4T" },
+  { name: "SEAT Leon", make: "SEAT", country: "Spain", body: "Hatchback", decade: 1990, hp: 150, engine: "I4T" },
+  // ── NETHERLANDS (New) ──
+  { name: "Donkervoort D8 GTO-S", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2010, hp: 380, engine: "I5T" },
+  { name: "Donkervoort F22", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2020, hp: 500, engine: "I5T" },
+  { name: "Spyker C8 Aileron", make: "Spyker", country: "Netherlands", body: "Coupe", decade: 2000, hp: 400, engine: "V8" },
+];
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONSTANTS & HELPERS
+// ═══════════════════════════════════════════════════════════════════════════════
+const COUNTRY_GROUPS = {
+  Japan:"Asia","South Korea":"Asia",
+  USA:"North America",
+  Germany:"Europe",Italy:"Europe",UK:"Europe",France:"Europe",Sweden:"Europe",
+  "Czech Republic":"Europe",Romania:"Europe",Austria:"Europe",Croatia:"Europe",
+  Spain:"Europe",Netherlands:"Europe",
+};
+const ATTRS = [
+  {key:"make",label:"MAKE"},
+  {key:"country",label:"ORIGIN"},
+  {key:"body",label:"BODY"},
+  {key:"decade",label:"ERA",format:v=>v+"s"},
+  {key:"hp",label:"HP",format:v=>(Math.floor(v/10)*10)+"s"},
+  {key:"engine",label:"ENGINE"},
+];
+const MAX_GUESSES = 8;
+const HINT_ORDER = ["origin","make","body","engine","year","hp"];
+const ACCENT_OPTIONS = {
+  red:{accent:"#f43f5e",glow:"rgba(244,63,94,0.3)",gradient:"#fb923c"},
+  blue:{accent:"#3b82f6",glow:"rgba(59,130,246,0.3)",gradient:"#60a5fa"},
+  purple:{accent:"#8b5cf6",glow:"rgba(139,92,246,0.3)",gradient:"#c084fc"},
+  gold:{accent:"#eab308",glow:"rgba(234,179,8,0.3)",gradient:"#fbbf24"},
+};
+
+function getDailyIndex(){
+  const start=new Date("2025-01-01").getTime();
+  const now=new Date().setHours(0,0,0,0);
+  return Math.floor((now-start)/86400000)%CARS.length;
+}
+function seededShuffle(seed){
+  let s=seed;
+  const next=()=>{s=(s*1103515245+12345)&0x7fffffff;return s/0x7fffffff;};
+  const arr=CARS.map((_,i)=>i);
+  for(let i=arr.length-1;i>0;i--){const j=Math.floor(next()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}
+  return arr;
+}
+function compareAttr(guess,answer,attr){
+  const g=guess[attr],a=answer[attr];
+  if(attr==="hp"){
+    const gB=Math.floor(g/10)*10,aB=Math.floor(a/10)*10;
+    if(gB===aB)return{status:"correct",arrow:""};
+    if(Math.abs(gB-aB)<=50)return{status:"close",arrow:gB<aB?"↑":"↓"};
+    return{status:"wrong",arrow:gB<aB?"↑":"↓"};
+  }
+  if(attr==="decade"){
+    if(g===a)return{status:"correct",arrow:""};
+    if(Math.abs(g-a)<=10)return{status:"close",arrow:g<a?"↑":"↓"};
+    return{status:"wrong",arrow:g<a?"↑":"↓"};
+  }
+  if(attr==="country"){
+    if(g===a)return{status:"correct"};
+    if(COUNTRY_GROUPS[g]===COUNTRY_GROUPS[a])return{status:"close"};
+    return{status:"wrong"};
+  }
+  if(attr==="make"){
+    if(g===a)return{status:"correct"};
+    if(guess.country===answer.country)return{status:"close"};
+    return{status:"wrong"};
+  }
+  return{status:g===a?"correct":"wrong"};
+}
+function statusColor(s){return s==="correct"?"var(--correct)":s==="close"?"var(--close)":"var(--wrong)";}
+function statusBg(s){return s==="correct"?"var(--correctBg)":s==="close"?"var(--closeBg)":"var(--wrongBg)";}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════════
+const dailyOrder = seededShuffle(42);
+let mode = "daily";          // daily | unlimited
+let guesses = [];
+let gameOver = false;
+let won = false;
+let unlimitedSeed = 1;
+let regionFilter = null;
+let hintStage = 0;
+let accentChoice = "red";
+let dropdownIndex = -1;
+let unlimitedAnswer = CARS[Math.floor(Math.random()*CARS.length)];
+let unlimitedStreak = 0;
+
+function getCarPool(){
+  if(mode==="daily"||!regionFilter) return CARS;
+  return CARS.filter(c=>COUNTRY_GROUPS[c.country]===regionFilter);
+}
+function getAnswer(){
+  return mode==="daily" ? CARS[dailyOrder[getDailyIndex()]] : unlimitedAnswer;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DOM REFS
+// ═══════════════════════════════════════════════════════════════════════════════
+const $ = id => document.getElementById(id);
+const searchInput = $("searchInput");
+const dropdown = $("dropdown");
+const guessRows = $("guessRows");
+const colHeaders = $("colHeaders");
+const actionRow = $("actionRow");
+const gameoverEl = $("gameover");
+const footerEl = $("footer");
+const helpPanel = $("helpPanel");
+const inputWrap = $("inputWrap");
+const modeRow = $("modeRow");
+const regionRow = $("regionRow");
+const colorPicker = $("colorPicker");
+const guessCountEl = $("guessCount");
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACCENT COLOR
+// ═══════════════════════════════════════════════════════════════════════════════
+function applyAccent(){
+  const a = ACCENT_OPTIONS[accentChoice];
+  document.documentElement.style.setProperty("--accent",a.accent);
+  document.documentElement.style.setProperty("--accentGlow",a.glow);
+  document.documentElement.style.setProperty("--accentGrad",a.gradient);
+}
+function buildColorPicker(){
+  colorPicker.innerHTML="";
+  Object.entries(ACCENT_OPTIONS).forEach(([key,val])=>{
+    const b=document.createElement("button");
+    b.className="color-swatch"+(accentChoice===key?" active":"");
+    b.style.background=val.accent;
+    b.title=key;
+    b.onclick=()=>{accentChoice=key;applyAccent();buildColorPicker();colorPicker.classList.remove("open");};
+    colorPicker.appendChild(b);
+  });
+}
+$("colorToggle").onclick=()=>colorPicker.classList.toggle("open");
+buildColorPicker(); applyAccent();
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODE / REGION BUTTONS
+// ═══════════════════════════════════════════════════════════════════════════════
+function buildModes(){
+  modeRow.innerHTML="";
+  [{k:"daily",l:"📅 Daily"},{k:"unlimited",l:"♾️ Unlimited"}].forEach(m=>{
+    const b=document.createElement("button");
+    b.className="pill"+(mode===m.k?" active":"");
+    b.textContent=m.l;
+    b.onclick=()=>switchMode(m.k);
+    modeRow.appendChild(b);
+  });
+  const hb=document.createElement("button");
+  hb.className="pill"; hb.textContent="❓ How to Play";
+  hb.onclick=()=>helpPanel.classList.toggle("open");
+  modeRow.appendChild(hb);
+}
+function buildRegions(){
+  regionRow.innerHTML="";
+  regionRow.className = "region-row" + (mode==="unlimited"?" show":"");
+  [{k:null,l:"🌍 All"},{k:"Asia",l:"🌏 Asia"},{k:"North America",l:"🌎 Americas"},{k:"Europe",l:"🌍 Europe"}].forEach(r=>{
+    const b=document.createElement("button");
+    b.className="pill pill-sm"+(regionFilter===r.k?" active":"");
+    b.textContent=r.l;
+    b.onclick=()=>{regionFilter=r.k;resetGame();};
+    regionRow.appendChild(b);
+  });
+}
+$("helpClose").onclick=()=>helpPanel.classList.remove("open");
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SEARCH / DROPDOWN
+// ═══════════════════════════════════════════════════════════════════════════════
+let filtered = [];
+function updateDropdown(){
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){ dropdown.classList.remove("open"); filtered=[]; return; }
+  const guessedNames = new Set(guesses.map(g=>g.name));
+  filtered = CARS.filter(c=>c.name.toLowerCase().includes(q)&&!guessedNames.has(c.name)).slice(0,20);
+  if(!filtered.length){ dropdown.classList.remove("open"); return; }
+  dropdown.classList.add("open");
+  dropdown.innerHTML = filtered.map((car,i)=>
+    `<div class="dd-item${i===dropdownIndex?" active":""}" data-i="${i}"><div class="dd-name">${car.name}</div><div class="dd-meta">${car.make} · ${car.country} · ${car.body} · ${car.hp}hp</div></div>`
+  ).join("");
+  dropdown.querySelectorAll(".dd-item").forEach(el=>{
+    el.onmousedown=()=>submitGuess(filtered[+el.dataset.i]);
+    el.ontouchstart=(e)=>{e.preventDefault();submitGuess(filtered[+el.dataset.i]);};
+    el.onmouseenter=()=>{dropdownIndex=+el.dataset.i;highlightDD();};
+  });
+}
+function highlightDD(){
+  dropdown.querySelectorAll(".dd-item").forEach((el,i)=>{
+    el.classList.toggle("active",i===dropdownIndex);
+    if(i===dropdownIndex) el.scrollIntoView({block:"nearest"});
+  });
+}
+searchInput.addEventListener("input",()=>{dropdownIndex=-1;updateDropdown();});
+searchInput.addEventListener("focus",updateDropdown);
+searchInput.addEventListener("blur",()=>setTimeout(()=>dropdown.classList.remove("open"),200));
+searchInput.addEventListener("keydown",e=>{
+  if(!filtered.length) return;
+  if(e.key==="ArrowDown"){e.preventDefault();dropdownIndex=Math.min(dropdownIndex+1,filtered.length-1);highlightDD();}
+  else if(e.key==="ArrowUp"){e.preventDefault();dropdownIndex=Math.max(dropdownIndex-1,0);highlightDD();}
+  else if(e.key==="Enter"&&dropdownIndex>=0){e.preventDefault();submitGuess(filtered[dropdownIndex]);}
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// GUESS SUBMISSION
+// ═══════════════════════════════════════════════════════════════════════════════
+function submitGuess(car){
+  const answer = getAnswer();
+  if(gameOver||guesses.some(g=>g.name===car.name)) return;
+  guesses.push(car);
+  searchInput.value=""; dropdown.classList.remove("open"); dropdownIndex=-1;
+  const isWon = car.name===answer.name;
+  const isOver = isWon||guesses.length>=MAX_GUESSES;
+  if(isOver){
+    gameOver=true;won=isWon;
+    if(mode==="unlimited"){
+      if(isWon) unlimitedStreak++;
+      else unlimitedStreak=0;
+    }
+  }
+  saveDaily();
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// HINTS
+// ═══════════════════════════════════════════════════════════════════════════════
+function useHint(){
+  const answer=getAnswer();
+  if(gameOver||hintStage>=1) return;
+  const alreadyCorrect=key=>guesses.some(g=>!g._hint&&(
+    (key==="origin"&&g.country===answer.country)||(key==="make"&&g.make===answer.make)||
+    (key==="body"&&g.body===answer.body)||(key==="engine"&&g.engine===answer.engine)||
+    (key==="year"&&g.decade===answer.decade)||(key==="hp"&&g.hp===answer.hp)
+  ));
+  const hintType=HINT_ORDER.find(h=>!alreadyCorrect(h))||HINT_ORDER[0];
+  guesses.push({
+    _hint:true,_hintType:hintType,name:"💡 HINT",
+    make:hintType==="make"?answer.make:"—",country:hintType==="origin"?answer.country:"—",
+    body:hintType==="body"?answer.body:"—",engine:hintType==="engine"?answer.engine:"—",
+    decade:hintType==="year"?answer.decade:"—",hp:hintType==="hp"?answer.hp:"—",
+  });
+  hintStage=1;
+  if(guesses.length>=MAX_GUESSES){gameOver=true;won=false;}
+  saveDaily();
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERSISTENCE (daily mode)
+// ═══════════════════════════════════════════════════════════════════════════════
+function loadDaily(){
+  if(mode!=="daily") return;
+  const saved=localStorage.getItem("throttle_daily");
+  if(!saved) return;
+  try{
+    const d=JSON.parse(saved);
+    const today=new Date().toISOString().slice(0,10);
+    if(d.date!==today) return;
+    guesses=d.guessNames.map(n=>{
+      if(n==="💡 HINT"){
+        // Reconstruct hint - find the hint data
+        return d.hintData||{_hint:true,_hintType:"origin",name:"💡 HINT",make:"—",country:"—",body:"—",engine:"—",decade:"—",hp:"—"};
+      }
+      return CARS.find(c=>c.name===n);
+    }).filter(Boolean);
+    if(d.gameOver){gameOver=true;won=d.won;}
+    if(d.hintStage) hintStage=d.hintStage;
+  }catch(e){}
+}
+function saveDaily(){
+  if(mode!=="daily") return;
+  const today=new Date().toISOString().slice(0,10);
+  const hintGuess=guesses.find(g=>g._hint);
+  localStorage.setItem("throttle_daily",JSON.stringify({
+    date:today,guessNames:guesses.map(g=>g.name),gameOver,won,
+    hintStage,hintData:hintGuess||null,
+  }));
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHARE
+// ═══════════════════════════════════════════════════════════════════════════════
+function shareResults(){
+  const answer=getAnswer();
+  const dayNum=getDailyIndex()+1;
+  const header="🏎️ THROTTLE #"+dayNum+" "+(won?guesses.length:"X")+"/"+MAX_GUESSES+"\n";
+  const grid=guesses.map(g=>{
+    if(g._hint) return "🟪🟪🟪🟪🟪🟪";
+    return ATTRS.map(a=>{const r=compareAttr(g,answer,a.key);return r.status==="correct"?"🟩":r.status==="close"?"🟨":"⬛";}).join("");
+  }).join("\n");
+  navigator.clipboard.writeText(header+grid+"\nthrottle.game").then(()=>{
+    const btn=document.querySelector(".share-btn");
+    if(btn){btn.textContent="✓ Copied!";setTimeout(()=>{btn.textContent="📋 Share Results";},2000);}
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODE SWITCHING
+// ═══════════════════════════════════════════════════════════════════════════════
+function switchMode(m){
+  mode=m;
+  if(m==="daily"){ regionFilter=null; unlimitedStreak=0; }
+  resetGame();
+  if(m==="daily") loadDaily();
+  render();
+}
+function resetGame(){
+  guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
+  if(mode==="unlimited"){
+    const pool=getCarPool();
+    unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
+  }
+  render();
+}
+function nextUnlimited(){
+  unlimitedSeed++;
+  const pool=getCarPool();
+  unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
+  guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════════════════════════════
+function render(){
+  const answer = getAnswer();
+  const pool = getCarPool();
+  buildModes(); buildRegions();
+  guessCountEl.textContent = guesses.length+"/"+MAX_GUESSES;
+  inputWrap.style.display = gameOver?"none":"";
+  colHeaders.className = "col-headers"+(guesses.length?" show":"");
+
+  // Guess rows
+  guessRows.innerHTML="";
+  guesses.forEach((guess,rowIdx)=>{
+    const row=document.createElement("div");
+    row.className="guess-row";
+    const isHint=guess._hint;
+    const isCorrect=!isHint&&guess.name===answer.name;
+    const isLast=rowIdx===guesses.length-1;
+
+    // Model cell
+    const mc=document.createElement("div");
+    mc.className="cell cell-model";
+    mc.style.background=isHint?"rgba(255,255,255,0.15)":isCorrect?"var(--correctBg)":"color-mix(in srgb, var(--surface) 80%, transparent)";
+    mc.style.border="1.5px solid "+(isHint?"rgba(255,255,255,0.7)":isCorrect?"var(--correct)":"var(--border)");
+    mc.style.color=isHint?"#fff":isCorrect?"var(--text)":"var(--textDim)";
+    if(isLast) mc.style.animation="flipIn 0.5s ease 0s both";
+    mc.textContent=isHint?"💡 HINT":guess.name.replace(guess.make+" ","");
+    row.appendChild(mc);
+
+    if(isHint){
+      ATTRS.forEach((attr,ci)=>{
+        const isRevealed=(attr.key==="country"&&guess._hintType==="origin")||(attr.key==="make"&&guess._hintType==="make")||
+          (attr.key==="body"&&guess._hintType==="body")||(attr.key==="engine"&&guess._hintType==="engine")||
+          (attr.key==="decade"&&guess._hintType==="year")||(attr.key==="hp"&&guess._hintType==="hp");
+        const val=isRevealed?(attr.format?attr.format(answer[attr.key]):answer[attr.key]):"—";
+        const c=document.createElement("div");
+        c.className="cell";
+        c.style.background=isRevealed?"var(--correctBg)":"color-mix(in srgb, var(--surface) 27%, transparent)";
+        c.style.border="1.5px solid "+(isRevealed?"color-mix(in srgb, var(--correct) 27%, transparent)":"color-mix(in srgb, var(--border) 27%, transparent)");
+        c.style.color=isRevealed?"var(--text)":"transparent";
+        if(isLast) c.style.animation="flipIn 0.5s ease "+((ci+1)*0.08)+"s both";
+        c.innerHTML='<div style="font-size:13px">'+val+'</div>';
+        row.appendChild(c);
+      });
+    } else {
+      ATTRS.forEach((attr,ci)=>{
+        const result=compareAttr(guess,answer,attr.key);
+        const val=attr.format?attr.format(guess[attr.key]):guess[attr.key];
+        const arrow=result.arrow||"";
+        const c=document.createElement("div");
+        c.className="cell";
+        c.style.background=statusBg(result.status);
+        c.style.border="1.5px solid "+statusColor(result.status);
+        c.style.color=result.status==="wrong"?"var(--textDim)":"var(--text)";
+        if(isLast) c.style.animation="flipIn 0.5s ease "+((ci+1)*0.08)+"s both";
+        c.innerHTML='<div style="font-size:13px">'+val+'</div>'+(arrow?'<div class="cell-arrow">'+arrow+'</div>':"");
+        row.appendChild(c);
+      });
+    }
+    guessRows.appendChild(row);
+  });
+
+  // Action row
+  actionRow.className="action-row"+(!gameOver&&guesses.length>0?" show":"");
+  actionRow.innerHTML="";
+  if(!gameOver&&guesses.length>0){
+    // Check if every attribute column already has an exact match from a real guess
+    const allColumnsMatched = ATTRS.every(attr =>
+      guesses.some(g => !g._hint && compareAttr(g, answer, attr.key).status === "correct")
+    );
+    if(allColumnsMatched){
+      const fb=document.createElement("button");fb.className="forfeit-btn";fb.textContent="🏳️ Forfeit";
+      fb.onclick=()=>{gameOver=true;won=false;if(mode==="unlimited")unlimitedStreak=0;render();};
+      actionRow.appendChild(fb);
+    } else if(hintStage<1){
+      const hb=document.createElement("button");hb.className="hint-btn";hb.textContent="💡 Hint";hb.onclick=useHint;
+      actionRow.appendChild(hb);
+    } else {
+      const fb=document.createElement("button");fb.className="forfeit-btn";fb.textContent="🏳️ Forfeit";
+      fb.onclick=()=>{gameOver=true;won=false;if(mode==="unlimited")unlimitedStreak=0;render();};
+      actionRow.appendChild(fb);
+    }
+  }
+
+  // Game over
+  gameoverEl.className="gameover"+(gameOver?" show":"");
+  if(gameOver){
+    let html='<div class="go-emoji">'+(won?"🏁":"💨")+'</div>';
+    if(won){
+      html+='<h2 class="go-title" style="background:linear-gradient(135deg,var(--correct),#4ade80);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;color:transparent">You got it!</h2>';
+      html+='<p class="go-sub"><strong>'+answer.name+'</strong> in '+guesses.length+' guess'+(guesses.length>1?"es":"")+'</p>';
+      if(mode==="unlimited"&&unlimitedStreak>1) html+='<p class="go-sub" style="margin-top:6px">🔥 Win streak: <strong>'+unlimitedStreak+'</strong></p>';
+    } else {
+      html+='<h2 class="go-title" style="color:var(--accent)">Out of guesses</h2>';
+      html+='<p class="go-sub">The answer was <strong>'+answer.name+'</strong></p>';
+      if(mode==="unlimited"&&unlimitedStreak===0) html+='<p class="go-sub" style="margin-top:6px">Streak reset</p>';
+    }
+    html+='<div class="go-btns">';
+    if(mode==="daily") html+='<button class="go-primary share-btn" onclick="shareResults()">📋 Share Results</button>';
+    if(mode==="unlimited") html+='<button class="go-primary" onclick="nextUnlimited()">Next Car →</button>';
+    html+='<button class="go-secondary" onclick="switchMode(\''+(mode==="daily"?"unlimited":"daily")+'\')">'+(mode==="daily"?"♾️ Play Unlimited":"📅 Try Daily")+'</button>';
+    html+='</div>';
+    html+='<div class="answer-grid">';
+    ATTRS.forEach(a=>{
+      html+='<div class="answer-cell"><div class="answer-label">'+a.label+'</div><div class="answer-val">'+(a.format?a.format(answer[a.key]):answer[a.key])+'</div></div>';
+    });
+    html+='</div>';
+    gameoverEl.innerHTML=html;
+  }
+
+  // Footer
+  footerEl.innerHTML='<p>'+pool.length+' cars in pool · '+(mode==="daily"?"Daily #"+(getDailyIndex()+1):"Unlimited #"+unlimitedSeed+(regionFilter?" · "+regionFilter:"")+(unlimitedStreak>0?" · 🔥 "+unlimitedStreak:""))+'</p>';
+
+  // Auto-scroll latest guess into view on mobile
+  if(guessRows.lastChild){
+    setTimeout(()=>guessRows.lastChild.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+loadDaily();
+render();
+</script>
+</body>
+</html>
