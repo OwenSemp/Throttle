@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SPEEDLE — Guess the Car</title>
+  <title>THROTTLE — Guess the Car</title>
   <meta name="description" content="Wordle-style car guessing game. Guess the mystery car in 8 tries.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏎️</text></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -208,7 +208,7 @@
     <div class="color-picker" id="colorPicker"></div>
   </div>
   <header>
-    <div class="title-row"><h1 class="title">SPEEDLE</h1><span style="font-size:28px">🏎️</span></div>
+    <div class="title-row"><h1 class="title">THROTTLE</h1><span style="font-size:28px">🏎️</span></div>
     <p class="subtitle">Guess the mystery car in 8 tries</p>
     <div class="mode-row" id="modeRow"></div>
     <div class="region-row" id="regionRow"></div>
@@ -1572,7 +1572,7 @@ function saveDaily(){
 function shareResults(){
   const answer=getAnswer();
   const dayNum=getDailyIndex()+1;
-  const header="🏎️ SPEEDLE #"+dayNum+" "+(won?guesses.length:"X")+"/"+MAX_GUESSES+"\n";
+  const header="🏎️ THROTTLE #"+dayNum+" "+(won?guesses.length:"X")+"/"+MAX_GUESSES+"\n";
   const grid=guesses.map(g=>{
     if(g._hint) return "🟪🟪🟪🟪🟪🟪";
     return ATTRS.map(a=>{const r=compareAttr(g,answer,a.key);return r.status==="correct"?"🟩":r.status==="close"?"🟨":"⬛";}).join("");
