@@ -1727,7 +1727,7 @@ function render(){
 
   // Footer
   footerEl.innerHTML='<p>'+pool.length+' cars in pool · '+(mode==="daily"?"Daily #"+(getDailyIndex()+1):"Unlimited #"+unlimitedSeed+(regionFilter?" · "+regionFilter:"")+(unlimitedStreak>0?" · 🔥 "+unlimitedStreak:""))+'</p>';
-  footerEl.innerHTML += '<p style="margin-top:8px; font-size:0.85rem; color:#888;">Have any suggestions? <a href="mailto:info@throttle-game.com" style="color:#888; text-decoration:underline;">Email us</a></p>';
+  footerEl.innerHTML += '<p style="margin-top:8px; font-size:0.85rem; color:#888;">Have any suggestions? <a href="mailto:support@throttle-game.com" style="color:#888; text-decoration:underline;">Email us</a></p>';
   
   // Auto-scroll latest guess into view on mobile
   if(guessRows.lastChild){
