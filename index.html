@@ -445,8 +445,11 @@ function buildEasyRow(){
     eb.innerHTML='🟢 Easy'+(easyMode?'<span class="easy-badge">ON</span>':'');
     eb.onclick=()=>{
       easyMode=!easyMode;
+      if(easyMode) regionFilter=null; // US-market pool ignores region filter to avoid 0-car pools
       guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
-      const pool=getCarPool();unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
+      const pool=getCarPool();
+      if(!pool.length){ easyMode=false; alert("No cars match these filters!"); render(); return; }
+      unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
       render();
     };
     easyRow.appendChild(eb);
@@ -616,14 +619,16 @@ function switchMode(m){
 function resetGame(){
   guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
   if(mode==="unlimited"){
-    const pool=getCarPool();
+    let pool=getCarPool();
+    if(!pool.length){ regionFilter=null; pool=getCarPool(); } // fallback: clear region filter if pool is empty
     unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
   }
   render();
 }
 function nextUnlimited(){
   unlimitedSeed++;
-  const pool=getCarPool();
+  let pool=getCarPool();
+  if(!pool.length){ regionFilter=null; pool=getCarPool(); }
   unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
   guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";
   render();
