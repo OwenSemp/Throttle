@@ -239,6 +239,7 @@
     <p class="subtitle">Guess the mystery car in 8 tries</p>
     <div class="mode-row" id="modeRow"></div>
     <div class="region-row" id="regionRow"></div>
+    <div class="region-row" id="easyRow"></div>
   </header>
   <div class="help-panel" id="helpPanel">
     <p style="font-weight:600;font-size:16px;margin-top:0">How to Play</p>
@@ -379,6 +380,7 @@ const helpPanel = $("helpPanel");
 const inputWrap = $("inputWrap");
 const modeRow = $("modeRow");
 const regionRow = $("regionRow");
+const easyRow = $("easyRow");
 const colorPicker = $("colorPicker");
 const guessCountEl = $("guessCount");
 
@@ -417,18 +419,6 @@ function buildModes(){
     b.onclick=()=>switchMode(m.k);
     modeRow.appendChild(b);
   });
-  if(mode==="unlimited"){
-    const eb=document.createElement("button");
-    eb.className="pill"+(easyMode?" active":"");
-    eb.innerHTML='🟢 Easy'+(easyMode?'<span class="easy-badge">ON</span>':'');
-    eb.onclick=()=>{
-      easyMode=!easyMode;
-      guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
-      const pool=getCarPool();unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
-      render();
-    };
-    modeRow.appendChild(eb);
-  }
   const hb=document.createElement("button");
   hb.className="pill"; hb.textContent="❓ How to Play";
   hb.onclick=()=>helpPanel.classList.toggle("open");
@@ -444,6 +434,22 @@ function buildRegions(){
     b.onclick=()=>{regionFilter=r.k;resetGame();};
     regionRow.appendChild(b);
   });
+}
+function buildEasyRow(){
+  easyRow.innerHTML="";
+  easyRow.className = "region-row" + (mode==="unlimited"?" show":"");
+  if(mode==="unlimited"){
+    const eb=document.createElement("button");
+    eb.className="pill pill-sm"+(easyMode?" active":"");
+    eb.innerHTML='🟢 Easy'+(easyMode?'<span class="easy-badge">ON</span>':'');
+    eb.onclick=()=>{
+      easyMode=!easyMode;
+      guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
+      const pool=getCarPool();unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
+      render();
+    };
+    easyRow.appendChild(eb);
+  }
 }
 $("helpClose").onclick=()=>helpPanel.classList.remove("open");
 
@@ -635,7 +641,7 @@ function render(){
   const pool = getCarPool();
   ATTRS = easyMode ? ALL_ATTRS.filter(a=>!a.easyHide) : ALL_ATTRS;
   document.querySelector(".wrap").classList.toggle("easy-mode", easyMode);
-  buildModes(); buildRegions();
+  buildModes(); buildRegions(); buildEasyRow();
   guessCountEl.textContent = guesses.length+"/"+MAX_GUESSES;
   inputWrap.style.display = gameOver?"none":"";
   colHeaders.className = "col-headers"+(guesses.length?" show":"");
