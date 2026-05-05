@@ -137,6 +137,15 @@
     .col-headers, .guess-row {
       display: grid; grid-template-columns: minmax(90px, 1.3fr) repeat(6, 1fr); gap: 6px;
     }
+    .easy-mode .col-headers, .easy-mode .guess-row {
+      grid-template-columns: minmax(90px, 1.3fr) repeat(4, 1fr);
+    }
+    .easy-badge {
+      display: inline-block; background: linear-gradient(135deg,#22c55e,#16a34a);
+      color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px;
+      border-radius: 8px; letter-spacing: 0.06em; margin-left: 6px; vertical-align: middle;
+    }
+    .easy-mode .easy-hide { display: none !important; }
     .col-headers { margin-bottom: 6px; padding: 0 2px; display: none; }
     .col-headers.show { display: grid; }
     .col-header {
@@ -207,6 +216,9 @@
       .col-headers, .guess-row {
         grid-template-columns: minmax(60px, 1.2fr) repeat(6, 1fr); gap: 3px;
       }
+      .easy-mode .col-headers, .easy-mode .guess-row {
+        grid-template-columns: minmax(60px, 1.2fr) repeat(4, 1fr);
+      }
       .cell { font-size: 10px; padding: 8px 3px; border-radius: 8px; }
       .cell-arrow { font-size: 14px; }
       .col-header { font-size: 8px; letter-spacing: 0.04em; }
@@ -249,7 +261,7 @@
   </div>
   <div class="col-headers" id="colHeaders">
     <div class="col-header">MODEL</div><div class="col-header">MAKE</div><div class="col-header">ORIGIN</div>
-    <div class="col-header">BODY</div><div class="col-header">ERA</div><div class="col-header">HP</div><div class="col-header">ENGINE</div>
+    <div class="col-header">BODY</div><div class="col-header easy-hide">ERA</div><div class="col-header">HP</div><div class="col-header easy-hide">ENGINE</div>
   </div>
   <div class="guess-rows" id="guessRows"></div>
   <div class="action-row" id="actionRow"></div>
@@ -269,14 +281,15 @@ const COUNTRY_GROUPS = {
   "Czech Republic":"Europe",Romania:"Europe",Austria:"Europe",Croatia:"Europe",
   Spain:"Europe",Netherlands:"Europe",
 };
-const ATTRS = [
+const ALL_ATTRS = [
   {key:"make",label:"MAKE"},
   {key:"country",label:"ORIGIN"},
   {key:"body",label:"BODY"},
-  {key:"decade",label:"ERA",format:v=>v+"s"},
+  {key:"decade",label:"ERA",format:v=>v+"s",easyHide:true},
   {key:"hp",label:"HP",format:v=>(Math.floor(v/10)*10)+"s"},
-  {key:"engine",label:"ENGINE"},
+  {key:"engine",label:"ENGINE",easyHide:true},
 ];
+let ATTRS = ALL_ATTRS;
 const MAX_GUESSES = 8;
 const HINT_ORDER = ["origin","make","body","engine","year","hp"];
 const ACCENT_OPTIONS = {
@@ -331,6 +344,7 @@ function statusBg(s){return s==="correct"?"var(--correctBg)":s==="close"?"var(--
 // ═══════════════════════════════════════════════════════════════════════════════
 const dailyOrder = seededShuffle(42);
 let mode = "daily";          // daily | unlimited
+let easyMode = false;
 let guesses = [];
 let gameOver = false;
 let won = false;
@@ -403,6 +417,18 @@ function buildModes(){
     b.onclick=()=>switchMode(m.k);
     modeRow.appendChild(b);
   });
+  if(mode==="unlimited"){
+    const eb=document.createElement("button");
+    eb.className="pill"+(easyMode?" active":"");
+    eb.innerHTML='🟢 Easy'+(easyMode?'<span class="easy-badge">ON</span>':'');
+    eb.onclick=()=>{
+      easyMode=!easyMode;
+      guesses=[];gameOver=false;won=false;hintStage=0;searchInput.value="";dropdownIndex=-1;
+      const pool=getCarPool();unlimitedAnswer=pool[Math.floor(Math.random()*pool.length)];
+      render();
+    };
+    modeRow.appendChild(eb);
+  }
   const hb=document.createElement("button");
   hb.className="pill"; hb.textContent="❓ How to Play";
   hb.onclick=()=>helpPanel.classList.toggle("open");
@@ -425,15 +451,36 @@ $("helpClose").onclick=()=>helpPanel.classList.remove("open");
 // SEARCH / DROPDOWN
 // ═══════════════════════════════════════════════════════════════════════════════
 let filtered = [];
+function getEasyFilter(){
+  if(!easyMode||!guesses.length) return ()=>true;
+  const answer = getAnswer();
+  const constraints = {};
+  guesses.filter(g=>!g._hint).forEach(g=>{
+    ALL_ATTRS.forEach(attr=>{
+      const result = compareAttr(g, answer, attr.key);
+      if(result.status==="correct") constraints[attr.key] = answer[attr.key];
+    });
+    if(compareAttr(g, answer, "hp").status==="correct") constraints._hpBin = Math.floor(answer.hp/10)*10;
+    if(compareAttr(g, answer, "decade").status==="correct") constraints.decade = answer.decade;
+  });
+  return (car)=>{
+    for(const [key,val] of Object.entries(constraints)){
+      if(key==="_hpBin"){ if(Math.floor(car.hp/10)*10!==val) return false; }
+      else if(car[key]!==val) return false;
+    }
+    return true;
+  };
+}
 function updateDropdown(){
   const q = searchInput.value.trim().toLowerCase();
   if(!q){ dropdown.classList.remove("open"); filtered=[]; return; }
   const guessedNames = new Set(guesses.map(g=>g.name));
-  filtered = CARS.filter(c=>c.name.toLowerCase().includes(q)&&!guessedNames.has(c.name)).slice(0,20);
+  const easyFilterFn = getEasyFilter();
+  filtered = CARS.filter(c=>c.name.toLowerCase().includes(q)&&!guessedNames.has(c.name)&&easyFilterFn(c)).slice(0,20);
   if(!filtered.length){ dropdown.classList.remove("open"); return; }
   dropdown.classList.add("open");
   dropdown.innerHTML = filtered.map((car,i)=>
-  `<div class="dd-item${i===dropdownIndex?" active":""}" data-i="${i}"><div class="dd-name">${car.name}</div><div class="dd-meta">${car.make} · ${car.country} · ${car.body} · ${car.decade}s · ${car.hp}hp</div></div>`
+  `<div class="dd-item${i===dropdownIndex?" active":""}" data-i="${i}"><div class="dd-name">${car.name}</div><div class="dd-meta">${car.make} · ${car.country} · ${car.body}${easyMode?"":" · "+car.decade+"s · "+car.hp+"hp"}</div></div>`
   ).join("");
   dropdown.querySelectorAll(".dd-item").forEach(el=>{
     el.onmousedown=()=>submitGuess(filtered[+el.dataset.i]);
@@ -559,7 +606,7 @@ function shareResults(){
 // ═══════════════════════════════════════════════════════════════════════════════
 function switchMode(m){
   mode=m;
-  if(m==="daily"){ regionFilter=null; unlimitedStreak=0; }
+  if(m==="daily"){ regionFilter=null; unlimitedStreak=0; easyMode=false; }
   resetGame();
   if(m==="daily") loadDaily();
   render();
@@ -586,6 +633,8 @@ function nextUnlimited(){
 function render(){
   const answer = getAnswer();
   const pool = getCarPool();
+  ATTRS = easyMode ? ALL_ATTRS.filter(a=>!a.easyHide) : ALL_ATTRS;
+  document.querySelector(".wrap").classList.toggle("easy-mode", easyMode);
   buildModes(); buildRegions();
   guessCountEl.textContent = guesses.length+"/"+MAX_GUESSES;
   inputWrap.style.display = gameOver?"none":"";
