@@ -462,17 +462,12 @@ function getEasyFilter(){
   const answer = getAnswer();
   const constraints = {};
   guesses.filter(g=>!g._hint).forEach(g=>{
-    ALL_ATTRS.forEach(attr=>{
-      const result = compareAttr(g, answer, attr.key);
-      if(result.status==="correct") constraints[attr.key] = answer[attr.key];
-    });
-    if(compareAttr(g, answer, "hp").status==="correct") constraints._hpBin = Math.floor(answer.hp/10)*10;
-    if(compareAttr(g, answer, "decade").status==="correct") constraints.decade = answer.decade;
+    if(compareAttr(g, answer, "make").status==="correct") constraints.make = answer.make;
+    if(compareAttr(g, answer, "country").status==="correct") constraints.country = answer.country;
   });
   return (car)=>{
     for(const [key,val] of Object.entries(constraints)){
-      if(key==="_hpBin"){ if(Math.floor(car.hp/10)*10!==val) return false; }
-      else if(car[key]!==val) return false;
+      if(car[key]!==val) return false;
     }
     return true;
   };
