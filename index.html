@@ -1477,7 +1477,7 @@ function updateDropdown(){
   if(!filtered.length){ dropdown.classList.remove("open"); return; }
   dropdown.classList.add("open");
   dropdown.innerHTML = filtered.map((car,i)=>
-    `<div class="dd-name">${car.name}</div><div class="dd-meta">${car.make} · ${car.country} · ${car.body} · ${car.decade}s · ${car.hp}hp</div></div>`
+  `<div class="dd-item${i===dropdownIndex?" active":""}" data-i="${i}"><div class="dd-name">${car.name}</div><div class="dd-meta">${car.make} · ${car.country} · ${car.body} · ${car.decade}s · ${car.hp}hp</div></div>`
   ).join("");
   dropdown.querySelectorAll(".dd-item").forEach(el=>{
     el.onmousedown=()=>submitGuess(filtered[+el.dataset.i]);
