@@ -358,8 +358,9 @@ let unlimitedAnswer = CARS[Math.floor(Math.random()*CARS.length)];
 let unlimitedStreak = 0;
 
 function getCarPool(){
-  if(mode==="daily"||!regionFilter) return CARS;
-  return CARS.filter(c=>COUNTRY_GROUPS[c.country]===regionFilter);
+  let pool = easyMode ? CARS.filter(c=>c.market_us) : CARS;
+  if(mode==="daily"||!regionFilter) return pool;
+  return pool.filter(c=>COUNTRY_GROUPS[c.country]===regionFilter);
 }
 function getAnswer(){
   return mode==="daily" ? CARS[dailyOrder[getDailyIndex()]] : unlimitedAnswer;
