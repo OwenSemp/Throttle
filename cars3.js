@@ -993,9 +993,4 @@ const CARS = [
   { name: "SEAT Mii", make: "SEAT", country: "Spain", body: "Hatchback", decade: 2010, hp: 75, drivetrain: "FWD", engine: "I3" , market_us: false },
   { name: "SEAT Tarraco", make: "SEAT", country: "Spain", body: "SUV", decade: 2010, hp: 190, drivetrain: "AWD", engine: "I4T" , market_us: false },
   { name: "SEAT Toledo (Mk1)", make: "SEAT", country: "Spain", body: "Sedan", decade: 1990, hp: 115, drivetrain: "FWD", engine: "I4" , market_us: false },
-
-  // ═══ NETHERLANDS ═══════════════════════════════════════════════════════════
-  // Donkervoort
-  { name: "Donkervoort D8 GTO-S", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2010, hp: 380, engine: "I5T" , market_us: false },
-  { name: "Donkervoort F22", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2020, hp: 500, engine: "I5T" , market_us: false },
 ];
