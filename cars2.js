@@ -318,9 +318,7 @@ const CARS = [
   { name: "Ford Taurus", make: "Ford", country: "USA", body: "Sedan", decade: 1980, hp: 288, engine: "V6T" , market_us: true },
   { name: "Ford Thunderbird", make: "Ford", country: "USA", body: "Convertible", decade: 1950, hp: 252, drivetrain: "RWD", engine: "V8" , market_us: true },
   { name: "Shelby GT500", make: "Ford", country: "USA", body: "Coupe", decade: 2000, hp: 760, drivetrain: "RWD", engine: "V8S" , market_us: true },
-  // Ford (Shelby)
-  { name: "Ford (Shelby) Mustang Shelby GT350", make: "Ford (Shelby)", country: "USA", body: "Coupe", decade: 2010, hp: 526, engine: "V8" , market_us: true },
-  { name: "Ford (Shelby) Mustang Shelby GT500", make: "Ford (Shelby)", country: "USA", body: "Coupe", decade: 2000, hp: 760, engine: "V8" , market_us: true },
+  { name: "Shelby GT350", make: "Ford", country: "USA", body: "Coupe", decade: 2010, hp: 526, engine: "V8" , market_us: true },
   // GMC
   { name: "GMC Acadia", make: "GMC", country: "USA", body: "SUV", decade: 2000, hp: 310, engine: "I4T" , market_us: true },
   { name: "GMC Canyon", make: "GMC", country: "USA", body: "Truck", decade: 2000, hp: 310, engine: "I4T" , market_us: true },
