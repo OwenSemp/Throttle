@@ -40,6 +40,7 @@ const CARS = [
   { name: "Honda Fit", make: "Honda", country: "Japan", body: "Hatchback", decade: 2000, hp: 130, drivetrain: "FWD", engine: "I4" , market_us: true },
   { name: "Honda HR-V", make: "Honda", country: "Japan", body: "SUV", decade: 2010, hp: 158, drivetrain: "AWD", engine: "I4" , market_us: true },
   { name: "Honda Integra", make: "Honda", country: "Japan", body: "Hatchback", decade: 1980, hp: 200, engine: "I4T" , market_us: true },
+  { name: "Honda Odyssey", make: "Honda", country: "Japan", body: "Minivan", decade: 1990, hp: 280, drivetrain: "FWD", engine: "V6", market_us: true },
   { name: "Honda NSX", make: "Honda", country: "Japan", body: "Coupe", decade: 1990, hp: 573, engine: "Hybrid" , market_us: true },
   { name: "Honda Passport", make: "Honda", country: "Japan", body: "SUV", decade: 1990, hp: 285, engine: "V6" , market_us: true },
   { name: "Honda Pilot", make: "Honda", country: "Japan", body: "SUV", decade: 2000, hp: 285, drivetrain: "AWD", engine: "V6" , market_us: true },
@@ -94,16 +95,15 @@ const CARS = [
   { name: "Mazda CX-70", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 340, engine: "Hybrid" , market_us: false },
   { name: "Mazda CX-80", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 327, engine: "I6" , market_us: false },
   { name: "Mazda CX-90", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 340, drivetrain: "AWD", engine: "I6T" , market_us: true },
-  { name: "Mazda Mazda3", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 191, engine: "I4" , market_us: true },
-  { name: "Mazda Mazda3 Turbo", make: "Mazda", country: "Japan", body: "Hatchback", decade: 2020, hp: 250, engine: "I4T" , market_us: true },
-  { name: "Mazda Mazda6", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 250, engine: "I4T" , market_us: true },
+  { name: "Mazda 3", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 191, engine: "I4" , market_us: true },
+  { name: "Mazda 3 Turbo", make: "Mazda", country: "Japan", body: "Hatchback", decade: 2020, hp: 250, engine: "I4T" , market_us: true },
+  { name: "Mazda 6", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 250, engine: "I4T" , market_us: true },
   { name: "Mazda MX-30", make: "Mazda", country: "Japan", body: "SUV", decade: 2020, hp: 143, engine: "EV" , market_us: true },
   { name: "Mazda MX-5 Miata", make: "Mazda", country: "Japan", body: "Convertible", decade: 1980, hp: 181, drivetrain: "RWD", engine: "I4" , market_us: true },
   { name: "Mazda MX-5 Miata RF", make: "Mazda", country: "Japan", body: "Coupe", decade: 2010, hp: 181, engine: "I4" , market_us: true },
   { name: "Mazda RX-7", make: "Mazda", country: "Japan", body: "Coupe", decade: 1970, hp: 255, drivetrain: "RWD", engine: "Rotary" , market_us: true },
   { name: "Mazda RX-8", make: "Mazda", country: "Japan", body: "Coupe", decade: 2000, hp: 232, drivetrain: "RWD", engine: "Rotary" , market_us: true },
-  { name: "Mazda3", make: "Mazda", country: "Japan", body: "Hatchback", decade: 2000, hp: 191, drivetrain: "AWD", engine: "I4" , market_us: true },
-  { name: "Mazda6", make: "Mazda", country: "Japan", body: "Sedan", decade: 2000, hp: 227, drivetrain: "FWD", engine: "I4T" , market_us: true },
+  
   // Mitsubishi
   { name: "Mitsubishi 3000GT VR-4", make: "Mitsubishi", country: "Japan", body: "Coupe", decade: 1990, hp: 320, drivetrain: "AWD", engine: "V6T" , market_us: true },
   { name: "Mitsubishi Eclipse", make: "Mitsubishi", country: "Japan", body: "Coupe", decade: 1990, hp: 210, drivetrain: "FWD", engine: "I4T" , market_us: true },
@@ -117,7 +117,7 @@ const CARS = [
   { name: "Mitsubishi Outlander Sport", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 2010, hp: 148, engine: "I4" , market_us: true },
   { name: "Mitsubishi Pajero", make: "Mitsubishi", country: "Japan", body: "SUV", decade: 1980, hp: 187, engine: "V6" , market_us: false },
   // Nissan
-  { name: "240Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 1960, hp: 151, drivetrain: "RWD", engine: "I6" , market_us: true },
+  { name: "Nissan 240Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 1960, hp: 151, drivetrain: "RWD", engine: "I6" , market_us: true },
   { name: "Nissan 240SX", make: "Nissan", country: "Japan", body: "Coupe", decade: 1980, hp: 155, drivetrain: "RWD", engine: "I4" , market_us: true },
   { name: "Nissan 350Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 2000, hp: 306, drivetrain: "RWD", engine: "V6" , market_us: true },
   { name: "Nissan 370Z", make: "Nissan", country: "Japan", body: "Coupe", decade: 2000, hp: 332, drivetrain: "RWD", engine: "V6" , market_us: true },
@@ -493,44 +493,40 @@ const CARS = [
   { name: "Maybach S 680", make: "Maybach", country: "Germany", body: "Sedan", decade: 2020, hp: 621, engine: "V12T" , market_us: true },
   { name: "Maybach SL 680 Monogram", make: "Maybach", country: "Germany", body: "Convertible", decade: 2020, hp: 577, engine: "V8T" , market_us: true },
   // Mercedes-AMG
-  { name: "Mercedes-AMG AMG A45 S", make: "Mercedes-AMG", country: "Germany", body: "Hatchback", decade: 2010, hp: 416, engine: "I4T" , market_us: false },
-  { name: "Mercedes-AMG AMG C63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 671, engine: "Hybrid" , market_us: true },
-  { name: "Mercedes-AMG AMG CLA 45 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 416, engine: "I4T" , market_us: false },
-  { name: "Mercedes-AMG AMG E63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2000, hp: 603, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG G63", make: "Mercedes-AMG", country: "Germany", body: "SUV", decade: 2010, hp: 577, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG GLE 63 S", make: "Mercedes-AMG", country: "Germany", body: "SUV", decade: 2010, hp: 603, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG GT", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2010, hp: 577, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG GT 63 S", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 630, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG GT 63 S E Performance", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2020, hp: 831, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG GT Black Series", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2020, hp: 720, engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG AMG One", make: "Mercedes-AMG", country: "Germany", body: "Coupe", decade: 2020, hp: 1049, engine: "Hybrid" , market_us: true },
-  { name: "Mercedes-AMG AMG S63", make: "Mercedes-AMG", country: "Germany", body: "Sedan", decade: 2010, hp: 791, engine: "Hybrid" , market_us: true },
-  { name: "Mercedes-AMG AMG SL 63", make: "Mercedes-AMG", country: "Germany", body: "Convertible", decade: 2020, hp: 577, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG A45 S", make: "Mercedes-Benz", country: "Germany", body: "Hatchback", decade: 2010, hp: 416, engine: "I4T" , market_us: false },
+  { name: "Mercedes AMG C63", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 469, drivetrain: "AWD", engine: "I4T" , market_us: true },
+  { name: "Mercedes AMG C63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 671, engine: "Hybrid" , market_us: true },
+  { name: "Mercedes AMG CLA 45 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 416, engine: "I4T" , market_us: false },
+  { name: "Mercedes AMG E63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 603, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG G63", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 577, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG GLE 63 S", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 603, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG GT", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2010, hp: 577, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG GT 63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 630, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG GT 63 S E Performance", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 831, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG GT Black Series", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2020, hp: 720, engine: "V8T" , market_us: true },
+  { name: "Mercedes AMG One", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2020, hp: 1049, engine: "Hybrid" , market_us: true },
+  { name: "Mercedes AMG S63", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 791, engine: "Hybrid" , market_us: true },
+  { name: "Mercedes AMG SL 63", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 2020, hp: 577, engine: "V8T" , market_us: true },
   // Mercedes-Benz
-  { name: "Mercedes-AMG C63", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 469, drivetrain: "AWD", engine: "I4T" , market_us: true },
-  { name: "Mercedes-AMG E63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2000, hp: 603, drivetrain: "AWD", engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG GT", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2010, hp: 577, drivetrain: "RWD", engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG GT 63 S", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 630, drivetrain: "AWD", engine: "V8T" , market_us: true },
-  { name: "Mercedes-AMG One", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 2020, hp: 1063, drivetrain: "AWD", engine: "Hybrid" , market_us: true },
-  { name: "Mercedes-Benz 300SL", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 1950, hp: 215, drivetrain: "RWD", engine: "I6" , market_us: true },
-  { name: "Mercedes-Benz A-Class", make: "Mercedes-Benz", country: "Germany", body: "Hatchback", decade: 1990, hp: 221, engine: "I4T" , market_us: false },
-  { name: "Mercedes-Benz C-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 255, drivetrain: "RWD", engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz CLA", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 221, engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz E-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 375, drivetrain: "AWD", engine: "I6T" , market_us: true },
-  { name: "Mercedes-Benz EQB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 228, engine: "EV" , market_us: true },
-  { name: "Mercedes-Benz EQE", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 402, engine: "EV" , market_us: true },
-  { name: "Mercedes-Benz EQS", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 649, drivetrain: "AWD", engine: "EV" , market_us: true },
-  { name: "Mercedes-Benz EQS SUV", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 536, engine: "EV" , market_us: true },
-  { name: "Mercedes-Benz G-Class", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 577, drivetrain: "4WD", engine: "V8T" , market_us: true },
-  { name: "Mercedes-Benz G-Class G550", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 416, engine: "V8T" , market_us: true },
-  { name: "Mercedes-Benz GLA", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 221, engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz GLB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 221, engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz GLC", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 255, drivetrain: "AWD", engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz GLE", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1990, hp: 362, drivetrain: "AWD", engine: "I6T" , market_us: true },
-  { name: "Mercedes-Benz GLS", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2000, hp: 483, engine: "V8T" , market_us: true },
-  { name: "Mercedes-Benz S-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1970, hp: 496, drivetrain: "AWD", engine: "V8T" , market_us: true },
-  { name: "Mercedes-Benz SL", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, drivetrain: "AWD", engine: "I4T" , market_us: true },
-  { name: "Mercedes-Benz SL 55", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, engine: "V8T" , market_us: true },
+  { name: "Mercedes 300SL", make: "Mercedes-Benz", country: "Germany", body: "Coupe", decade: 1950, hp: 215, drivetrain: "RWD", engine: "I6" , market_us: true },
+  { name: "Mercedes A-Class", make: "Mercedes-Benz", country: "Germany", body: "Hatchback", decade: 1990, hp: 221, engine: "I4T" , market_us: false },
+  { name: "Mercedes C-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 255, drivetrain: "RWD", engine: "I4T" , market_us: true },
+  { name: "Mercedes CLA", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2010, hp: 221, engine: "I4T" , market_us: true },
+  { name: "Mercedes E-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1990, hp: 375, drivetrain: "AWD", engine: "I6T" , market_us: true },
+  { name: "Mercedes EQB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 228, engine: "EV" , market_us: true },
+  { name: "Mercedes EQE", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 402, engine: "EV" , market_us: true },
+  { name: "Mercedes EQS", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 2020, hp: 649, drivetrain: "AWD", engine: "EV" , market_us: true },
+  { name: "Mercedes EQS SUV", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 536, engine: "EV" , market_us: true },
+  { name: "Mercedes G-Class", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 577, drivetrain: "4WD", engine: "V8T" , market_us: true },
+  { name: "Mercedes G-Class G550", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1970, hp: 416, engine: "V8T" , market_us: true },
+  { name: "Mercedes GLA", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 221, engine: "I4T" , market_us: true },
+  { name: "Mercedes GLB", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2020, hp: 221, engine: "I4T" , market_us: true },
+  { name: "Mercedes GLC", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2010, hp: 255, drivetrain: "AWD", engine: "I4T" , market_us: true },
+  { name: "Mercedes GLE", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 1990, hp: 362, drivetrain: "AWD", engine: "I6T" , market_us: true },
+  { name: "Mercedes GLS", make: "Mercedes-Benz", country: "Germany", body: "SUV", decade: 2000, hp: 483, engine: "V8T" , market_us: true },
+  { name: "Mercedes S-Class", make: "Mercedes-Benz", country: "Germany", body: "Sedan", decade: 1970, hp: 496, drivetrain: "AWD", engine: "V8T" , market_us: true },
+  { name: "Mercedes SL", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, drivetrain: "AWD", engine: "I4T" , market_us: true },
+  { name: "Mercedes SL 55", make: "Mercedes-Benz", country: "Germany", body: "Convertible", decade: 1950, hp: 469, engine: "V8T" , market_us: true },
   // Mini
   { name: "Mini Clubman JCW", make: "Mini", country: "Germany", body: "Wagon", decade: 2010, hp: 301, engine: "I4T" , market_us: false },
   { name: "Mini Cooper S", make: "Mini", country: "Germany", body: "Hatchback", decade: 2000, hp: 189, engine: "I4T" , market_us: true },
@@ -710,9 +706,6 @@ const CARS = [
   { name: "Pagani Zonda R", make: "Pagani", country: "Italy", body: "Coupe", decade: 2000, hp: 740, engine: "V12" , market_us: true },
 
   // ═══ UK ══════════════════════════════════════════════════════════════════════
-  // Ariel
-  { name: "Ariel Atom", make: "Ariel", country: "UK", body: "Convertible", decade: 2000, hp: 310, drivetrain: "RWD", engine: "I4T" , market_us: false },
-  { name: "Ariel Nomad", make: "Ariel", country: "UK", body: "SUV", decade: 2010, hp: 235, engine: "I4T" , market_us: false },
   // Aston Martin
   { name: "Aston Martin DB11", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2010, hp: 630, drivetrain: "RWD", engine: "V8T" , market_us: true },
   { name: "Aston Martin DB12", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2020, hp: 671, engine: "V8T" , market_us: true },
@@ -729,9 +722,6 @@ const CARS = [
   { name: "Aston Martin Vanquish", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2000, hp: 824, engine: "V12T" , market_us: true },
   { name: "Aston Martin Vantage", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2000, hp: 656, drivetrain: "RWD", engine: "V8T" , market_us: true },
   { name: "Aston Martin Vulcan", make: "Aston Martin", country: "UK", body: "Coupe", decade: 2010, hp: 820, engine: "V12" , market_us: true },
-  // BAC
-  { name: "BAC Mono", make: "BAC", country: "UK", body: "Coupe", decade: 2010, hp: 305, engine: "I4T" , market_us: false },
-  { name: "BAC Mono R", make: "BAC", country: "UK", body: "Coupe", decade: 2010, hp: 340, engine: "I4T" , market_us: false },
   // Bentley
   { name: "Bentley Batur", make: "Bentley", country: "UK", body: "Coupe", decade: 2020, hp: 730, engine: "W12T" , market_us: false },
   { name: "Bentley Bentayga", make: "Bentley", country: "UK", body: "SUV", decade: 2010, hp: 542, drivetrain: "AWD", engine: "V8T" , market_us: true },
@@ -742,13 +732,6 @@ const CARS = [
   { name: "Bentley Flying Spur", make: "Bentley", country: "UK", body: "Sedan", decade: 2000, hp: 626, drivetrain: "AWD", engine: "W12T" , market_us: true },
   { name: "Bentley Flying Spur Speed", make: "Bentley", country: "UK", body: "Sedan", decade: 2020, hp: 771, engine: "Hybrid" , market_us: true },
   { name: "Bentley Mulliner Bacalar", make: "Bentley", country: "UK", body: "Convertible", decade: 2020, hp: 650, engine: "W12T" , market_us: false },
-  // Caterham
-  { name: "Caterham Seven", make: "Caterham", country: "UK", body: "Convertible", decade: 1970, hp: 240, drivetrain: "RWD", engine: "I4" , market_us: false },
-  // Ginetta
-  { name: "Ginetta G40", make: "Ginetta", country: "UK", body: "Coupe", decade: 2010, hp: 200, engine: "I4" , market_us: false },
-  { name: "Ginetta G55", make: "Ginetta", country: "UK", body: "Coupe", decade: 2010, hp: 380, engine: "V6" , market_us: false },
-  // Gordon Murray
-  { name: "Gordon Murray T.50", make: "Gordon Murray", country: "UK", body: "Coupe", decade: 2020, hp: 654, drivetrain: "RWD", engine: "V12" , market_us: false },
   // Jaguar
   { name: "Jaguar C-X75", make: "Jaguar", country: "UK", body: "Coupe", decade: 2010, hp: 850, engine: "Hybrid" , market_us: false },
   { name: "Jaguar E-Pace", make: "Jaguar", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" , market_us: true },
@@ -768,11 +751,10 @@ const CARS = [
   { name: "Land Rover Defender V8", make: "Land Rover", country: "UK", body: "SUV", decade: 2020, hp: 518, engine: "V8T" , market_us: true },
   { name: "Land Rover Discovery", make: "Land Rover", country: "UK", body: "SUV", decade: 1980, hp: 296, drivetrain: "4WD", engine: "I6T" , market_us: true },
   { name: "Land Rover Discovery Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" , market_us: true },
-  { name: "Land Rover Range Rover", make: "Land Rover", country: "UK", body: "SUV", decade: 1970, hp: 523, engine: "V8T" , market_us: true },
-  { name: "Land Rover Range Rover Evoque", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" , market_us: true },
-  { name: "Land Rover Range Rover Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2000, hp: 523, engine: "V8T" , market_us: true },
-  { name: "Land Rover Range Rover Sport SV", make: "Land Rover", country: "UK", body: "SUV", decade: 2020, hp: 626, engine: "V8T" , market_us: true },
-  { name: "Land Rover Range Rover Velar", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 395, engine: "I6T" , market_us: true },
+  { name: "Range Rover Evoque", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 246, engine: "I4T" , market_us: true },
+  { name: "Range Rover Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2000, hp: 523, engine: "V8T" , market_us: true },
+  { name: "Range Rover Sport SV", make: "Land Rover", country: "UK", body: "SUV", decade: 2020, hp: 626, engine: "V8T" , market_us: true },
+  { name: "Range Rover Velar", make: "Land Rover", country: "UK", body: "SUV", decade: 2010, hp: 395, engine: "I6T" , market_us: true },
   { name: "Range Rover", make: "Land Rover", country: "UK", body: "SUV", decade: 1970, hp: 523, drivetrain: "4WD", engine: "V8T" , market_us: true },
   { name: "Range Rover Sport", make: "Land Rover", country: "UK", body: "SUV", decade: 2000, hp: 395, drivetrain: "4WD", engine: "I6T" , market_us: true },
   // Lotus
@@ -807,15 +789,6 @@ const CARS = [
   // Mini
   { name: "Mini Cooper", make: "Mini", country: "UK", body: "Hatchback", decade: 1950, hp: 189, drivetrain: "FWD", engine: "I4T" , market_us: true },
   { name: "Mini Cooper JCW", make: "Mini", country: "UK", body: "Hatchback", decade: 2000, hp: 301, drivetrain: "FWD", engine: "I4T" , market_us: true },
-  // Morgan
-  { name: "Morgan Plus Four", make: "Morgan", country: "UK", body: "Convertible", decade: 2020, hp: 255, engine: "I4T" , market_us: false },
-  { name: "Morgan Plus Six", make: "Morgan", country: "UK", body: "Convertible", decade: 2010, hp: 335, drivetrain: "RWD", engine: "I6T" , market_us: false },
-  { name: "Morgan Super 3", make: "Morgan", country: "UK", body: "Convertible", decade: 2020, hp: 118, engine: "I3" , market_us: false },
-  // Noble
-  { name: "Noble M600", make: "Noble", country: "UK", body: "Coupe", decade: 2000, hp: 650, drivetrain: "RWD", engine: "V8T" , market_us: false },
-  // Radical
-  { name: "Radical SR10", make: "Radical", country: "UK", body: "Coupe", decade: 2020, hp: 425, engine: "V6" , market_us: false },
-  { name: "Radical SR3 XX", make: "Radical", country: "UK", body: "Coupe", decade: 2020, hp: 230, engine: "I4" , market_us: false },
   // Rolls-Royce
   { name: "Rolls-Royce Cullinan", make: "Rolls-Royce", country: "UK", body: "SUV", decade: 2010, hp: 563, drivetrain: "AWD", engine: "V12T" , market_us: true },
   { name: "Rolls-Royce Cullinan Black Badge", make: "Rolls-Royce", country: "UK", body: "SUV", decade: 2020, hp: 592, engine: "V12T" , market_us: true },
@@ -923,11 +896,6 @@ const CARS = [
   { name: "Volvo XC90 Recharge", make: "Volvo", country: "Sweden", body: "SUV", decade: 2020, hp: 455, engine: "Hybrid" , market_us: true },
 
   // ═══ FRANCE ═════════════════════════════════════════════════════════════════
-  // Alpine
-  { name: "Alpine A110", make: "Alpine", country: "France", body: "Coupe", decade: 2010, hp: 296, drivetrain: "RWD", engine: "I4T" , market_us: false },
-  { name: "Alpine A110 R", make: "Alpine", country: "France", body: "Coupe", decade: 2020, hp: 300, engine: "I4T" , market_us: false },
-  { name: "Alpine A110 S", make: "Alpine", country: "France", body: "Coupe", decade: 2020, hp: 292, engine: "I4T" , market_us: false },
-  { name: "Alpine A290", make: "Alpine", country: "France", body: "Hatchback", decade: 2020, hp: 218, engine: "EV" , market_us: false },
   // Bugatti
   { name: "Bugatti Bolide", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1824, engine: "W16T" , market_us: true },
   { name: "Bugatti Centodieci", make: "Bugatti", country: "France", body: "Coupe", decade: 2020, hp: 1577, engine: "W16T" , market_us: true },
@@ -950,11 +918,6 @@ const CARS = [
   { name: "Citroën C5 X", make: "Citroën", country: "France", body: "Sedan", decade: 2020, hp: 225, engine: "Hybrid" , market_us: false },
   { name: "Citroën DS", make: "Citroën", country: "France", body: "Sedan", decade: 1950, hp: 109, drivetrain: "FWD", engine: "I4" , market_us: false },
   { name: "Citroën ë-C4", make: "Citroën", country: "France", body: "Hatchback", decade: 2020, hp: 136, engine: "EV" , market_us: false },
-  // DS
-  { name: "DS 3 Crossback", make: "DS", country: "France", body: "SUV", decade: 2010, hp: 155, engine: "I4T" , market_us: false },
-  { name: "DS 4", make: "DS", country: "France", body: "SUV", decade: 2020, hp: 225, engine: "I4T" , market_us: false },
-  { name: "DS 7 Crossback", make: "DS", country: "France", body: "SUV", decade: 2010, hp: 300, engine: "I4T" , market_us: false },
-  { name: "DS 9", make: "DS", country: "France", body: "Sedan", decade: 2020, hp: 360, engine: "I4T" , market_us: false },
   // Peugeot
   { name: "Peugeot 106 Rallye", make: "Peugeot", country: "France", body: "Hatchback", decade: 1990, hp: 103, drivetrain: "FWD", engine: "I4" , market_us: false },
   { name: "Peugeot 107", make: "Peugeot", country: "France", body: "Hatchback", decade: 2000, hp: 68, drivetrain: "FWD", engine: "I3" , market_us: false },
@@ -1014,19 +977,6 @@ const CARS = [
   { name: "Dacia Sandero Stepway", make: "Dacia", country: "Romania", body: "Hatchback", decade: 2010, hp: 110, engine: "I4T" , market_us: false },
   { name: "Dacia Spring", make: "Dacia", country: "Romania", body: "Hatchback", decade: 2020, hp: 65, engine: "EV" , market_us: false },
 
-  // ═══ AUSTRIA ════════════════════════════════════════════════════════════════
-  // KTM
-  { name: "KTM X-Bow GT-XR", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 500, engine: "I5T" , market_us: false },
-  { name: "KTM X-Bow GT2", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 600, engine: "I5T" , market_us: false },
-  { name: "KTM X-Bow GT4", make: "KTM", country: "Austria", body: "Coupe", decade: 2020, hp: 370, engine: "I5T" , market_us: false },
-  { name: "KTM X-Bow R", make: "KTM", country: "Austria", body: "Coupe", decade: 2000, hp: 300, engine: "I4T" , market_us: false },
-
-  // ═══ CROATIA ════════════════════════════════════════════════════════════════
-  // Rimac
-  { name: "Rimac Concept_One", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2010, hp: 1224, engine: "EV" , market_us: false },
-  { name: "Rimac Concept_Two", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2010, hp: 1914, engine: "EV" , market_us: false },
-  { name: "Rimac Nevera", make: "Rimac", country: "Croatia", body: "Coupe", decade: 2020, hp: 1914, engine: "EV" , market_us: false },
-
   // ═══ SPAIN ══════════════════════════════════════════════════════════════════
   // CUPRA
   { name: "CUPRA Born", make: "CUPRA", country: "Spain", body: "Hatchback", decade: 2020, hp: 228, engine: "EV" , market_us: false },
@@ -1048,6 +998,4 @@ const CARS = [
   // Donkervoort
   { name: "Donkervoort D8 GTO-S", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2010, hp: 380, engine: "I5T" , market_us: false },
   { name: "Donkervoort F22", make: "Donkervoort", country: "Netherlands", body: "Coupe", decade: 2020, hp: 500, engine: "I5T" , market_us: false },
-  // Spyker
-  { name: "Spyker C8 Aileron", make: "Spyker", country: "Netherlands", body: "Coupe", decade: 2000, hp: 400, engine: "V8" , market_us: false },
 ];
