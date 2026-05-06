@@ -399,6 +399,7 @@ const CARS = [
   { name: "Citroën DS", make: "Citroën", country: "France", body: "Sedan", decade: 1950, hp: 109, drivetrain: "FWD", engine: "I4" , market_us: false },
   { name: "Renault Clio RS", make: "Renault", country: "France", body: "Hatchback", decade: 1990, hp: 220, drivetrain: "FWD", engine: "I4T" , market_us: false },
   { name: "Peugeot 205 GTI", make: "Peugeot", country: "France", body: "Hatchback", decade: 1980, hp: 130, drivetrain: "FWD", engine: "I4" , market_us: false },
+  { name: "Renault Twingo", make: "Renault", country: "France", body: "Hatchback", decade: 1990, hp: 75, drivetrain: "RWD", engine: "I3", market_us: false },
 
   // ═══ NEW ADDITIONS FROM EXPANDED DATABASE ══════════════════════════════════
   // ── USA (New) ──
