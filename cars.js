@@ -953,19 +953,19 @@ const CARS = [
   { name: "Renault Zoe", make: "Renault", country: "France", body: "Hatchback", decade: 2010, hp: 135, engine: "EV" , market_us: false },
 
   // ═══ CZECH REPUBLIC ════════════════════════════════════════════════════════
-  // Škoda
-  { name: "Škoda Elroq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 282, engine: "EV" , market_us: false },
-  { name: "Škoda Enyaq Coupe RS", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" , market_us: false },
-  { name: "Škoda Enyaq iV", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" , market_us: false },
-  { name: "Škoda Fabia RS", make: "Škoda", country: "Czech Republic", body: "Hatchback", decade: 2000, hp: 180, engine: "I4T" , market_us: false },
-  { name: "Škoda Kamiq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 150, engine: "I4T" , market_us: false },
-  { name: "Škoda Karoq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" , market_us: false },
-  { name: "Škoda Kodiaq", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" , market_us: false },
-  { name: "Škoda Kodiaq RS", make: "Škoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 245, engine: "I4T" , market_us: false },
-  { name: "Škoda Octavia", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 1990, hp: 150, engine: "I4T" , market_us: false },
-  { name: "Škoda Octavia RS", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 245, engine: "I4T" , market_us: false },
-  { name: "Škoda Scala", make: "Škoda", country: "Czech Republic", body: "Hatchback", decade: 2010, hp: 150, engine: "I4T" , market_us: false },
-  { name: "Škoda Superb", make: "Škoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 280, engine: "I4T" , market_us: false },
+  // Skoda
+  { name: "Skoda Elroq", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 282, engine: "EV" , market_us: false },
+  { name: "Skoda Enyaq Coupe RS", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" , market_us: false },
+  { name: "Skoda Enyaq iV", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 299, engine: "EV" , market_us: false },
+  { name: "Skoda Fabia RS", make: "Skoda", country: "Czech Republic", body: "Hatchback", decade: 2000, hp: 180, engine: "I4T" , market_us: false },
+  { name: "Skoda Kamiq", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2020, hp: 150, engine: "I4T" , market_us: false },
+  { name: "Skoda Karoq", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" , market_us: false },
+  { name: "Skoda Kodiaq", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 190, engine: "I4T" , market_us: false },
+  { name: "Skoda Kodiaq RS", make: "Skoda", country: "Czech Republic", body: "SUV", decade: 2010, hp: 245, engine: "I4T" , market_us: false },
+  { name: "Skoda Octavia", make: "Skoda", country: "Czech Republic", body: "Sedan", decade: 1990, hp: 150, engine: "I4T" , market_us: false },
+  { name: "Skoda Octavia RS", make: "Skoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 245, engine: "I4T" , market_us: false },
+  { name: "Skoda Scala", make: "Skoda", country: "Czech Republic", body: "Hatchback", decade: 2010, hp: 150, engine: "I4T" , market_us: false },
+  { name: "Skoda Superb", make: "Skoda", country: "Czech Republic", body: "Sedan", decade: 2000, hp: 280, engine: "I4T" , market_us: false },
 
   // ═══ ROMANIA ════════════════════════════════════════════════════════════════
   // Dacia
