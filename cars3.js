@@ -194,6 +194,9 @@ const CARS = [
   { name: "Toyota Tundra", make: "Toyota", country: "Japan", body: "Truck", decade: 1990, hp: 389, drivetrain: "4WD", engine: "V6T" , market_us: true },
   { name: "Toyota Venza", make: "Toyota", country: "Japan", body: "SUV", decade: 2000, hp: 219, engine: "Hybrid" , market_us: true },
   { name: "Toyota Yaris GR", make: "Toyota", country: "Japan", body: "Hatchback", decade: 2020, hp: 268, drivetrain: "AWD", engine: "I3T" , market_us: false },
+  { name: "Toyota Caldina", make: "Toyota", country: "Japan", body: "Wagon", decade: 1990, hp: 115, drivetrain: "FWD", engine: "I4", market_us: false },
+  { name: "Toyota Caldina GT-T", make: "Toyota", country: "Japan", body: "Wagon", decade: 1990, hp: 255, drivetrain: "AWD", engine: "I4T", market_us: false },
+  { name: "Toyota Caldina GT-Four", make: "Toyota", country: "Japan", body: "Wagon", decade: 2000, hp: 260, drivetrain: "AWD", engine: "I4T", market_us: false },
 
   // ═══ USA ═════════════════════════════════════════════════════════════════════
   // AMC
