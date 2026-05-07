@@ -131,7 +131,6 @@ const CARS = [
   { name: "Nissan Maxima", make: "Nissan", country: "Japan", body: "Sedan", decade: 1980, hp: 300, drivetrain: "FWD", engine: "V6" , market_us: true },
   { name: "Nissan Murano", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 260, engine: "V6" , market_us: true },
   { name: "Nissan Pathfinder", make: "Nissan", country: "Japan", body: "SUV", decade: 1980, hp: 284, drivetrain: "4WD", engine: "V6" , market_us: true },
-  { name: "Nissan Qashqai", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 188, engine: "I4T" , market_us: false },
   { name: "Nissan Rogue", make: "Nissan", country: "Japan", body: "SUV", decade: 2000, hp: 201, drivetrain: "AWD", engine: "I4T" , market_us: true },
   { name: "Nissan Sentra", make: "Nissan", country: "Japan", body: "Sedan", decade: 1980, hp: 149, engine: "I4" , market_us: true },
   { name: "Nissan Skyline GT-R R32", make: "Nissan", country: "Japan", body: "Coupe", decade: 1980, hp: 276, engine: "I6T" , market_us: false },
@@ -154,7 +153,6 @@ const CARS = [
   { name: "Subaru WRX STI", make: "Subaru", country: "Japan", body: "Sedan", decade: 2000, hp: 310, drivetrain: "AWD", engine: "F4T" , market_us: true },
   // Suzuki
   { name: "Suzuki Cappuccino", make: "Suzuki", country: "Japan", body: "Convertible", decade: 1990, hp: 63, engine: "I3T" , market_us: false },
-  { name: "Suzuki Hayabusa", make: "Suzuki", country: "Japan", body: "Coupe", decade: 1990, hp: 197, engine: "I4" , market_us: false },
   { name: "Suzuki Jimny", make: "Suzuki", country: "Japan", body: "SUV", decade: 1970, hp: 102, drivetrain: "4WD", engine: "I4T" , market_us: false },
   { name: "Suzuki S-Cross", make: "Suzuki", country: "Japan", body: "SUV", decade: 2010, hp: 129, engine: "I4T" , market_us: false },
   { name: "Suzuki Swift Sport", make: "Suzuki", country: "Japan", body: "Hatchback", decade: 2000, hp: 140, drivetrain: "FWD", engine: "I4T" , market_us: false },
