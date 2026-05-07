@@ -229,11 +229,93 @@
       .title { font-size: 30px; }
       .dd-item { padding: 16px 18px; }
     }
+
+    /* ── Auth / Streak UI ── */
+    .auth-bar {
+      position: absolute; top: 20px; left: 16px; z-index: 10;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .auth-btn {
+      padding: 7px 14px; border-radius: 10px; font-family: 'Outfit'; font-size: 12px;
+      font-weight: 600; cursor: pointer; transition: all .2s;
+      border: 1.5px solid var(--border); background: var(--surface); color: var(--textDim);
+    }
+    .auth-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .streak-badge {
+      display: flex; align-items: center; gap: 5px;
+      padding: 6px 12px; border-radius: 10px;
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+      border: 1.5px solid color-mix(in srgb, var(--accent) 30%, transparent);
+      font-size: 12px; font-weight: 700; color: var(--text); font-family: 'Space Mono';
+    }
+    .auth-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+      align-items: center; justify-content: center;
+    }
+    .auth-overlay.open { display: flex; }
+    .auth-modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px; width: 100%; max-width: 360px; margin: 16px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    }
+    .auth-modal h2 { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .auth-modal p { color: var(--textDim); font-size: 13px; margin-bottom: 24px; }
+    .auth-input {
+      width: 100%; padding: 12px 16px; border-radius: 10px; margin-bottom: 10px;
+      background: var(--bg); border: 1.5px solid var(--border);
+      color: var(--text); font-family: 'Outfit'; font-size: 14px; outline: none;
+    }
+    .auth-input:focus { border-color: var(--accent); }
+    .auth-submit {
+      width: 100%; padding: 13px; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accentGrad));
+      color: #fff; font-family: 'Outfit'; font-size: 14px; font-weight: 700;
+      cursor: pointer; margin-bottom: 10px; transition: opacity .2s;
+    }
+    .auth-submit:hover { opacity: 0.9; }
+    .auth-google {
+      width: 100%; padding: 13px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: transparent;
+      color: var(--text); font-family: 'Outfit'; font-size: 14px; font-weight: 600;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all .2s; margin-bottom: 16px;
+    }
+    .auth-google:hover { border-color: var(--accent); }
+    .auth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+    .auth-divider span { color: var(--textDim); font-size: 12px; white-space: nowrap; }
+    .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+    .auth-toggle { text-align: center; font-size: 13px; color: var(--textDim); }
+    .auth-toggle a { color: var(--accent); cursor: pointer; }
+    .auth-error { color: #f43f5e; font-size: 12px; margin-bottom: 10px; min-height: 16px; }
+    .auth-close { float: right; background: none; border: none; color: var(--textDim); font-size: 20px; cursor: pointer; margin-top: -8px; }
   </style>
 </head>
 <body>
+<!-- Auth Modal -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <button class="auth-close" id="authClose">×</button>
+    <h2 id="authTitle">Sign in</h2>
+    <p id="authSubtitle">Save your streak across devices</p>
+    <div class="auth-error" id="authError"></div>
+    <button class="auth-google" id="googleSignIn">
+      <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/><path fill="#34A853" d="M8.98 17c2.16 0 3.97-.72 5.3-1.94l-2.6-2a4.8 4.8 0 0 1-7.18-2.54H1.83v2.07A8 8 0 0 0 8.98 17z"/><path fill="#FBBC05" d="M4.5 10.52a4.8 4.8 0 0 1 0-3.04V5.41H1.83a8 8 0 0 0 0 7.18l2.67-2.07z"/><path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/></svg>
+      Continue with Google
+    </button>
+    <div class="auth-divider"><span>or email</span></div>
+    <input class="auth-input" type="email" id="authEmail" placeholder="Email address" />
+    <input class="auth-input" type="password" id="authPassword" placeholder="Password" />
+    <button class="auth-submit" id="authSubmit">Sign in</button>
+    <div class="auth-toggle" id="authToggle">No account? <a id="authSwitch">Create one</a></div>
+  </div>
+</div>
+
 <div class="glow" id="glow"></div>
 <div class="wrap">
+  <div class="auth-bar" id="authBar">
+    <button class="auth-btn" id="authBarBtn">Sign in</button>
+  </div>
   <div class="color-btn-wrap">
     <button class="color-btn" id="colorToggle" aria-label="Change accent color">🎨</button>
     <div class="color-picker" id="colorPicker"></div>
@@ -591,6 +673,9 @@ function saveDaily(){
     date:today,guessNames:guesses.map(g=>g.name),gameOver,won,
     hintStage,hintData:hintGuess||null,
   }));
+  // Expose state for Firebase streak module
+  window._throttleMode=mode; window._throttleGameOver=gameOver; window._throttleWon=won;
+  if(typeof window._onSaveDaily==="function") window._onSaveDaily();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -766,6 +851,183 @@ function render(){
 // ═══════════════════════════════════════════════════════════════════════════════
 loadDaily();
 render();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+         createUserWithEmailAndPassword, GoogleAuthProvider,
+         signInWithPopup, signOut }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc }
+  from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDZKWSekMaOL35p6rnqVdalaRHu09DHpvw",
+  authDomain: "throttle-3194f.firebaseapp.com",
+  projectId: "throttle-3194f",
+  storageBucket: "throttle-3194f.firebasestorage.app",
+  messagingSenderId: "213274895313",
+  appId: "1:213274895313:web:9acc5842d0f4010651f6f0",
+  measurementId: "G-Y7PVEJYVB0"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+let currentUser = null;
+let isSignUp    = false;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
+const authOverlay  = document.getElementById("authOverlay");
+const authClose    = document.getElementById("authClose");
+const authBarBtn   = document.getElementById("authBarBtn");
+const authBar      = document.getElementById("authBar");
+const googleSignIn = document.getElementById("googleSignIn");
+const authEmail    = document.getElementById("authEmail");
+const authPassword = document.getElementById("authPassword");
+const authSubmit   = document.getElementById("authSubmit");
+const authSwitchEl = document.getElementById("authSwitch");
+const authToggle   = document.getElementById("authToggle");
+const authTitle    = document.getElementById("authTitle");
+const authError    = document.getElementById("authError");
+
+// ── Open / close modal ────────────────────────────────────────────────────────
+authBarBtn.addEventListener("click", () => {
+  if (currentUser) { signOut(auth); return; }
+  authOverlay.classList.add("open");
+});
+authClose.addEventListener("click", () => authOverlay.classList.remove("open"));
+authOverlay.addEventListener("click", e => {
+  if (e.target === authOverlay) authOverlay.classList.remove("open");
+});
+
+// ── Toggle sign in / sign up ──────────────────────────────────────────────────
+function bindSwitch() {
+  document.getElementById("authSwitch").addEventListener("click", () => {
+    isSignUp = !isSignUp;
+    authTitle.textContent  = isSignUp ? "Create account" : "Sign in";
+    authSubmit.textContent = isSignUp ? "Create account" : "Sign in";
+    authToggle.innerHTML   = isSignUp
+      ? 'Have an account? <a id="authSwitch">Sign in</a>'
+      : 'No account? <a id="authSwitch">Create one</a>';
+    authError.textContent = "";
+    bindSwitch();
+  });
+}
+bindSwitch();
+
+// ── Google sign-in ────────────────────────────────────────────────────────────
+googleSignIn.addEventListener("click", async () => {
+  authError.textContent = "";
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+    authOverlay.classList.remove("open");
+  } catch(e) { authError.textContent = e.message; }
+});
+
+// ── Email / password ──────────────────────────────────────────────────────────
+authSubmit.addEventListener("click", async () => {
+  authError.textContent = "";
+  const email = authEmail.value.trim();
+  const pass  = authPassword.value;
+  if (!email || !pass) { authError.textContent = "Please fill in all fields."; return; }
+  try {
+    if (isSignUp) await createUserWithEmailAndPassword(auth, email, pass);
+    else          await signInWithEmailAndPassword(auth, email, pass);
+    authOverlay.classList.remove("open");
+  } catch(e) {
+    const msgs = {
+      "auth/invalid-email":        "Invalid email address.",
+      "auth/wrong-password":       "Incorrect password.",
+      "auth/user-not-found":       "No account with that email.",
+      "auth/email-already-in-use":"Email already in use.",
+      "auth/weak-password":        "Password must be at least 6 characters."
+    };
+    authError.textContent = msgs[e.code] || e.message;
+  }
+});
+
+// ── Firestore helpers ─────────────────────────────────────────────────────────
+async function loadStreak(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    if (snap.exists()) {
+      const d = snap.data();
+      window._fbStreak     = d.streak     || 0;
+      window._fbBestStreak = d.bestStreak || 0;
+      window._fbLastPlayed = d.lastPlayed || "";
+    } else {
+      window._fbStreak = 0; window._fbBestStreak = 0; window._fbLastPlayed = "";
+    }
+  } catch(e) { console.warn("Firestore read error", e); }
+  renderBadge();
+}
+
+async function saveStreak(uid, streak, best, lastPlayed) {
+  try {
+    await setDoc(doc(db, "users", uid), { streak, bestStreak: best, lastPlayed }, { merge: true });
+  } catch(e) { console.warn("Firestore write error", e); }
+}
+
+// ── Streak badge ──────────────────────────────────────────────────────────────
+function renderBadge() {
+  document.getElementById("streakBadge")?.remove();
+  if (!currentUser) return;
+  const streak = window._fbStreak     || 0;
+  const best   = window._fbBestStreak || 0;
+  const badge  = document.createElement("div");
+  badge.id        = "streakBadge";
+  badge.className = "streak-badge";
+  badge.title     = `Best streak: ${best}`;
+  badge.innerHTML = `🔥 ${streak} <span style="font-size:10px;color:var(--textDim);margin-left:2px">best ${best}</span>`;
+  authBar.insertBefore(badge, authBarBtn);
+}
+
+// ── Auth state ────────────────────────────────────────────────────────────────
+onAuthStateChanged(auth, async user => {
+  currentUser = user;
+  if (user) {
+    authBarBtn.textContent         = "Sign out";
+    authBarBtn.style.borderColor   = "var(--accent)";
+    authBarBtn.style.color         = "var(--accent)";
+    await loadStreak(user.uid);
+  } else {
+    authBarBtn.textContent         = "Sign in";
+    authBarBtn.style.borderColor   = "";
+    authBarBtn.style.color         = "";
+    document.getElementById("streakBadge")?.remove();
+  }
+});
+
+// ── Hook into game's saveDaily ────────────────────────────────────────────────
+window._onSaveDaily = function() {
+  if (window._throttleMode !== "daily" || !window._throttleGameOver) return;
+  if (!currentUser) return;
+
+  const today     = new Date().toISOString().slice(0, 10);
+  const lastPlayed = window._fbLastPlayed || "";
+  if (lastPlayed === today) return; // already recorded today
+
+  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  let streak = window._fbStreak     || 0;
+  let best   = window._fbBestStreak || 0;
+
+  if (window._throttleWon) {
+    streak = (lastPlayed === yesterday) ? streak + 1 : 1;
+    best   = Math.max(best, streak);
+  } else {
+    streak = 0;
+  }
+
+  window._fbStreak     = streak;
+  window._fbBestStreak = best;
+  window._fbLastPlayed = today;
+
+  saveStreak(currentUser.uid, streak, best, today);
+  renderBadge();
+};
 </script>
 </body>
 </html>
