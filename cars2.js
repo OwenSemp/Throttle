@@ -286,7 +286,7 @@ const CARS = [
   // Fisker
   { name: "Fisker Ocean", make: "Fisker", country: "USA", body: "SUV", decade: 2020, hp: 550, drivetrain: "AWD", engine: "EV" , market_us: true },
   // Ford
-  { name: "Ford Bronco", make: "Ford", country: "USA", body: "SUV", decade: 1960, hp: 300, drivetrain: "4WD", engine: "V6T" , market_us: true },
+  { name: "Ford Bronco", make: "Ford", country: "USA", body: "SUV", decade: 1960, hp: 300, drivetrain: "4WD", engine: "V8" , market_us: true },
   { name: "Ford Bronco Sport", make: "Ford", country: "USA", body: "SUV", decade: 2020, hp: 250, drivetrain: "AWD", engine: "I4T" , market_us: true },
   { name: "Ford Crown Victoria", make: "Ford", country: "USA", body: "Sedan", decade: 1990, hp: 224, engine: "V8" , market_us: true },
   { name: "Ford Edge", make: "Ford", country: "USA", body: "SUV", decade: 2000, hp: 250, drivetrain: "AWD", engine: "I4T" , market_us: true },
