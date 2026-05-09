@@ -567,7 +567,7 @@ function updateDropdown(){
   if(!q){ dropdown.classList.remove("open"); filtered=[]; return; }
   const guessedNames = new Set(guesses.map(g=>g.name));
   const easyFilterFn = getEasyFilter();
-  filtered = getCarPool().filter(c=>c.name.toLowerCase().includes(q)&&!guessedNames.has(c.name)&&easyFilterFn(c)).slice(0,20);
+  filtered = getCarPool().filter(c=>c.name.toLowerCase().includes(q)&&!guessedNames.has(c.name)&&easyFilterFn(c)).slice(0,30);
   if(!filtered.length){ dropdown.classList.remove("open"); return; }
   dropdown.classList.add("open");
   dropdown.innerHTML = filtered.map((car,i)=>
