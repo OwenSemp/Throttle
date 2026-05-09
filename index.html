@@ -53,26 +53,41 @@
     }
     .wrap { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 48px 16px 40px; }
 
-    /* Color picker */
-    .color-btn-wrap { position: absolute; top: 20px; right: 16px; z-index: 10; }
-    .color-btn {
-      width: 44px; height: 44px; border-radius: 10px; cursor: pointer;
+    /* ── Hamburger Menu ── */
+    .burger-wrap { position: absolute; top: 16px; right: 16px; z-index: 100; }
+    .burger-btn {
+      width: 48px; height: 48px; border-radius: 12px; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 18px; transition: all .2s; border: 1.5px solid var(--accent);
-      background: color-mix(in srgb, var(--accent) 13%, transparent);
+      font-size: 26px; transition: all .2s; border: 1.5px solid var(--border);
+      background: var(--surface); line-height: 1;
     }
-    .color-picker {
-      position: absolute; top: 42px; right: 0;
+    .burger-btn:hover { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); }
+    .burger-menu {
+      position: absolute; top: 56px; right: 0; min-width: 220px;
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: 12px; padding: 8px; display: none; gap: 6px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      border-radius: 16px; padding: 8px; display: none; flex-direction: column; gap: 2px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6); z-index: 100;
     }
-    .color-picker.open { display: flex; }
+    .burger-menu.open { display: flex; }
+    .burger-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px; border-radius: 10px; cursor: pointer;
+      font-size: 14px; font-weight: 600; color: var(--text);
+      border: none; background: transparent; font-family: 'Outfit';
+      width: 100%; text-align: left; transition: background .15s;
+    }
+    .burger-item:hover { background: var(--surfaceHover); }
+    .burger-item-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+    .burger-divider { height: 1px; background: var(--border); margin: 4px 0; }
+    /* Color swatches inside menu */
+    .burger-color-row {
+      display: flex; gap: 8px; padding: 8px 14px 10px; align-items: center;
+    }
     .color-swatch {
-      width: 32px; height: 32px; border-radius: 8px;
-      border: 2px solid transparent; cursor: pointer; transition: all .15s;
+      width: 28px; height: 28px; border-radius: 8px;
+      border: 2px solid transparent; cursor: pointer; transition: all .15s; flex-shrink: 0;
     }
-    .color-swatch.active { border-color: #fff; transform: scale(1.15); }
+    .color-swatch.active { border-color: #fff; transform: scale(1.18); }
 
     /* Header */
     header { text-align: center; margin-bottom: 28px; }
@@ -313,12 +328,29 @@
 
 <div class="glow" id="glow"></div>
 <div class="wrap">
-  <div class="auth-bar" id="authBar">
-    <button class="auth-btn" id="authBarBtn">Sign in</button>
-  </div>
-  <div class="color-btn-wrap">
-    <button class="color-btn" id="colorToggle" aria-label="Change accent color">🎨</button>
-    <div class="color-picker" id="colorPicker"></div>
+  <!-- Hidden auth-bar kept for JS compatibility, streak badge still renders here -->
+  <div class="auth-bar" id="authBar" style="position:absolute;top:20px;left:16px;z-index:10;display:flex;align-items:center;gap:8px;"></div>
+
+  <!-- Hamburger menu -->
+  <div class="burger-wrap" id="burgerWrap">
+    <button class="burger-btn" id="burgerBtn" aria-label="Menu">🍔</button>
+    <div class="burger-menu" id="burgerMenu">
+      <!-- Sign in item -->
+      <button class="burger-item" id="authBarBtn">
+        <span class="burger-item-icon">👤</span>
+        <span id="burgerAuthLabel">Sign in</span>
+      </button>
+      <div class="burger-divider"></div>
+      <!-- How to Play -->
+      <button class="burger-item" id="burgerHelp">
+        <span class="burger-item-icon">❓</span>
+        How to Play
+      </button>
+      <div class="burger-divider"></div>
+      <!-- Color picker -->
+      <div style="padding:6px 14px 2px;font-size:11px;font-weight:700;color:var(--textDim);letter-spacing:0.08em;font-family:'Space Mono'">ACCENT COLOR</div>
+      <div class="burger-color-row" id="burgerColorRow"></div>
+    </div>
   </div>
   <header>
     <div class="title-row"><h1 class="title">THROTTLE</h1><span style="font-size:28px">🏎️</span></div>
@@ -480,19 +512,41 @@ function applyAccent(){
   document.documentElement.style.setProperty("--accentGlow",a.glow);
   document.documentElement.style.setProperty("--accentGrad",a.gradient);
 }
-function buildColorPicker(){
-  colorPicker.innerHTML="";
+function buildColorSwatches(){
+  const row = document.getElementById("burgerColorRow");
+  if(!row) return;
+  row.innerHTML="";
   Object.entries(ACCENT_OPTIONS).forEach(([key,val])=>{
     const b=document.createElement("button");
     b.className="color-swatch"+(accentChoice===key?" active":"");
     b.style.background=val.accent;
     b.title=key;
-    b.onclick=()=>{accentChoice=key;applyAccent();buildColorPicker();colorPicker.classList.remove("open");};
-    colorPicker.appendChild(b);
+    b.onclick=()=>{accentChoice=key;applyAccent();buildColorSwatches();};
+    row.appendChild(b);
   });
 }
-$("colorToggle").onclick=()=>colorPicker.classList.toggle("open");
-buildColorPicker(); applyAccent();
+
+// ── Hamburger menu ──────────────────────────────────────────────────────────
+const burgerBtn  = document.getElementById("burgerBtn");
+const burgerMenu = document.getElementById("burgerMenu");
+const burgerHelp = document.getElementById("burgerHelp");
+
+burgerBtn.addEventListener("click", e => {
+  e.stopPropagation();
+  burgerMenu.classList.toggle("open");
+});
+document.addEventListener("click", e => {
+  if(!document.getElementById("burgerWrap").contains(e.target)){
+    burgerMenu.classList.remove("open");
+  }
+});
+burgerHelp.addEventListener("click", () => {
+  helpPanel.classList.toggle("open");
+  burgerMenu.classList.remove("open");
+});
+
+buildColorSwatches();
+applyAccent();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODE / REGION BUTTONS
@@ -506,10 +560,6 @@ function buildModes(){
     b.onclick=()=>switchMode(m.k);
     modeRow.appendChild(b);
   });
-  const hb=document.createElement("button");
-  hb.className="pill"; hb.textContent="❓ How to Play";
-  hb.onclick=()=>helpPanel.classList.toggle("open");
-  modeRow.appendChild(hb);
 }
 function buildRegions(){
   regionRow.innerHTML="";
@@ -884,6 +934,7 @@ const authOverlay  = document.getElementById("authOverlay");
 const authClose    = document.getElementById("authClose");
 const authBarBtn   = document.getElementById("authBarBtn");
 const authBar      = document.getElementById("authBar");
+const burgerAuthLabel = document.getElementById("burgerAuthLabel");
 const googleSignIn = document.getElementById("googleSignIn");
 const authEmail    = document.getElementById("authEmail");
 const authPassword = document.getElementById("authPassword");
@@ -897,6 +948,7 @@ const authError    = document.getElementById("authError");
 authBarBtn.addEventListener("click", () => {
   if (currentUser) { signOut(auth); return; }
   authOverlay.classList.add("open");
+  document.getElementById("burgerMenu").classList.remove("open");
 });
 authClose.addEventListener("click", () => authOverlay.classList.remove("open"));
 authOverlay.addEventListener("click", e => {
@@ -989,12 +1041,12 @@ function renderBadge() {
 onAuthStateChanged(auth, async user => {
   currentUser = user;
   if (user) {
-    authBarBtn.textContent         = "Sign out";
+    burgerAuthLabel.textContent    = "Sign out";
     authBarBtn.style.borderColor   = "var(--accent)";
     authBarBtn.style.color         = "var(--accent)";
     await loadStreak(user.uid);
   } else {
-    authBarBtn.textContent         = "Sign in";
+    burgerAuthLabel.textContent    = "Sign in";
     authBarBtn.style.borderColor   = "";
     authBarBtn.style.color         = "";
     document.getElementById("streakBadge")?.remove();
