@@ -740,7 +740,7 @@ function shareResults(){
     if(g._hint) return "🟪🟪🟪🟪🟪🟪";
     return ATTRS.map(a=>{const r=compareAttr(g,answer,a.key);return r.status==="correct"?"🟩":r.status==="close"?"🟨":"⬛";}).join("");
   }).join("\n");
-  navigator.clipboard.writeText(header+grid+"\nthrottle.game").then(()=>{
+  navigator.clipboard.writeText(header+grid+"\nthrottle-game.com").then(()=>{
     const btn=document.querySelector(".share-btn");
     if(btn){btn.textContent="✓ Copied!";setTimeout(()=>{btn.textContent="📋 Share Results";},2000);}
   });
