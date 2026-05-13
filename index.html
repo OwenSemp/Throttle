@@ -778,6 +778,7 @@ function nextUnlimited(){
 // RENDER
 // ═══════════════════════════════════════════════════════════════════════════════
 function render(){
+  console.log("gameOver:", gameOver, "won:", won, "guesses:", guesses.length); // ← ADD THIS
   const answer = getAnswer();
   const pool = getCarPool();
   ATTRS = easyMode ? ALL_ATTRS.filter(a=>!a.easyHide) : ALL_ATTRS;
